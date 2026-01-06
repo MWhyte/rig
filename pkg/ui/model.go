@@ -41,39 +41,38 @@ type Filters struct {
 // Model is the main application model
 type Model struct {
 	// UI state
-	view         ViewMode
-	width        int
-	height       int
-	ready        bool
-	err          error
+	view   ViewMode
+	width  int
+	height int
+	ready  bool
+	err    error
 
 	// Focus management
 	focusedSection Section
 
 	// Components
-	stationList  list.Model
-	stations     []radiobrowser.Station
+	stationList list.Model
+	stations    []radiobrowser.Station
 
 	// Playback
-	player       player.Player
-	nowPlaying   *radiobrowser.Station
-	isPlaying    bool
-	stationIcon  string  // Rendered icon for current station
+	player     player.Player
+	nowPlaying *radiobrowser.Station
+	isPlaying  bool
 
 	// API
-	apiClient    *radiobrowser.Client
+	apiClient *radiobrowser.Client
 
 	// Filters
-	filters          Filters
-	countries        []radiobrowser.Country
-	tags             []radiobrowser.Tag
-	languages        []radiobrowser.Language
-	editingFilter    FilterField
-	filterInput      textinput.Model
+	filters       Filters
+	countries     []radiobrowser.Country
+	tags          []radiobrowser.Tag
+	languages     []radiobrowser.Language
+	editingFilter FilterField
+	filterInput   textinput.Model
 
 	// Search
-	searchQuery  string
-	searching    bool
+	searchQuery string
+	searching   bool
 }
 
 // NewModel creates a new application model
@@ -182,7 +181,6 @@ type metadataLoadedMsg struct {
 type playStationMsg struct{ station *radiobrowser.Station }
 type stopPlaybackMsg struct{}
 type applyFiltersMsg struct{}
-type iconLoadedMsg struct{ iconStr string }
 
 // Update handles messages and updates the model
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -223,10 +221,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case stopPlaybackMsg:
 		m.stopPlayback()
-		return m, nil
-
-	case iconLoadedMsg:
-		m.stationIcon = msg.iconStr
 		return m, nil
 
 	case errMsg:

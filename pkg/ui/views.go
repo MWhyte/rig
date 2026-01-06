@@ -6,7 +6,6 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mrwhyte/rig/pkg/icon"
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
 )
 
@@ -16,19 +15,8 @@ var (
 			Foreground(lipgloss.Color("205")).
 			MarginBottom(1)
 
-	nowPlayingStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("86")).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("86")).
-			Padding(0, 1).
-			MarginBottom(1)
-
 	helpStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241"))
-
-	statusStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("250"))
 )
 
 // StationItem implements list.Item for station list
@@ -36,7 +24,7 @@ type StationItem struct {
 	station radiobrowser.Station
 }
 
-func (i StationItem) Title() string       { return i.station.Name }
+func (i StationItem) Title() string { return i.station.Name }
 func (i StationItem) Description() string {
 	return fmt.Sprintf("%s • %s • %d kbps • %d clicks",
 		i.station.Country,
@@ -126,22 +114,8 @@ func (m *Model) playStation(station *radiobrowser.Station) (tea.Model, tea.Cmd) 
 
 	m.nowPlaying = station
 	m.isPlaying = true
-	m.stationIcon = "" // Clear old icon
 
-	// Load station icon in background
-	return m, m.loadStationIcon(station.Favicon)
-}
-
-// loadStationIcon loads a station icon in the background
-func (m *Model) loadStationIcon(faviconURL string) tea.Cmd {
-	return func() tea.Msg {
-		iconStr, err := icon.FetchAndRender(faviconURL)
-		if err != nil {
-			// Return placeholder on error
-			iconStr, _ = icon.FetchAndRender("")
-		}
-		return iconLoadedMsg{iconStr}
-	}
+	return m, nil
 }
 
 // stopPlayback stops current playback
@@ -151,5 +125,4 @@ func (m *Model) stopPlayback() {
 	}
 	m.nowPlaying = nil
 	m.isPlaying = false
-	m.stationIcon = ""
 }

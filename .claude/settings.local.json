@@ -14,7 +14,9 @@
       "Bash(mpv:*)",
       "Bash(timeout 3 ./rig:*)",
       "Bash(go get:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(find:*)",
+      "Bash(go vet:*)"
     ]
   }
 }

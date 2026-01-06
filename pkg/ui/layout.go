@@ -142,6 +142,7 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 			Render("  No station playing"))
 		content.WriteString("\n\n  Select a station and press Enter to play")
 
+		// No color bar when nothing is playing
 		panel := lipgloss.JoinVertical(lipgloss.Left, title, content.String())
 
 		return borderStyle.
@@ -159,7 +160,7 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 
 	vol, _ := m.player.GetVolume()
 
-	// Build station info (right side)
+	// Build station info
 	var info strings.Builder
 
 	info.WriteString(lipgloss.NewStyle().
@@ -184,21 +185,12 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 
 	info.WriteString(fmt.Sprintf("Volume: %d%%", vol))
 
-	// Get icon (or show loading/placeholder)
-	iconDisplay := m.stationIcon
-	if iconDisplay == "" {
-		iconDisplay = "  Loading\n  icon..."
-	}
-
-	// Combine icon and info horizontally
-	contentLayout := lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		iconDisplay,
-		"  ", // spacing
-		info.String(),
+	// Place content
+	panel := lipgloss.JoinVertical(
+		lipgloss.Left,
+		title,
+		"\n"+info.String(),
 	)
-
-	panel := lipgloss.JoinVertical(lipgloss.Left, title, "\n"+contentLayout)
 
 	return borderStyle.
 		Width(width).
