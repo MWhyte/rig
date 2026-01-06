@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go mod init:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go build:*)",
+      "Bash(tree:*)",
+      "WebFetch(domain:www.radio-browser.info)",
+      "WebFetch(domain:gitlab.com)",
+      "WebSearch",
+      "WebFetch(domain:api.radio-browser.info)",
+      "WebFetch(domain:docs.radio-browser.info)",
+      "Bash(go run:*)",
+      "Bash(mpv:*)",
+      "Bash(timeout 3 ./rig:*)",
+      "Bash(go get:*)"
+    ]
+  }
+}
