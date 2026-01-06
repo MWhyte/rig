@@ -31,14 +31,26 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case " ":
-		// Toggle play/pause
+		// Toggle play/pause, or play selected station
 		if m.isPlaying && m.nowPlaying != nil {
+			// Currently playing - pause it
 			if err := m.player.Pause(); err == nil {
 				m.isPlaying = false
 			}
+			return m, nil
 		} else if !m.isPlaying && m.nowPlaying != nil {
+			// Paused - resume it
 			if err := m.player.Resume(); err == nil {
 				m.isPlaying = true
+			}
+			return m, nil
+		} else if m.focusedSection == SectionStationList && len(m.stations) > 0 {
+			// No station playing and in station list - play selected station
+			selected := m.stationList.Index()
+			if selected >= 0 && selected < len(m.stations) {
+				return m, func() tea.Msg {
+					return playStationMsg{&m.stations[selected]}
+				}
 			}
 		}
 		return m, nil

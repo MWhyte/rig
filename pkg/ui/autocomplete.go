@@ -113,11 +113,11 @@ func (m *AutocompleteModel) View(width, height int) string {
 	content.WriteString("\n")
 	content.WriteString(fmt.Sprintf("  %s: ", m.fieldName))
 	content.WriteString(m.textInput.View())
-	content.WriteString("\n\n")
+	content.WriteString("\n")
 
 	// Calculate how many suggestions we can show
-	// Reserve lines for: field name+input (2), spacing (2), help text (2) = 6 lines
-	availableLines := height - 6
+	// Reserve lines for: field name+input (2), help text (1) = 3 lines
+	availableLines := height - 3
 	if availableLines < 1 {
 		availableLines = 1
 	}
@@ -131,7 +131,6 @@ func (m *AutocompleteModel) View(width, height int) string {
 		} else {
 			content.WriteString(noMatchStyle.Render("  No matches found"))
 		}
-		content.WriteString("\n")
 	} else {
 		// Adjust scroll offset to keep selected item visible
 		if m.selectedIndex >= m.scrollOffset+availableLines {
@@ -172,12 +171,12 @@ func (m *AutocompleteModel) View(width, height int) string {
 		if len(m.filteredSugs) > availableLines {
 			scrollInfo := fmt.Sprintf("  (%d/%d)", m.selectedIndex+1, len(m.filteredSugs))
 			scrollStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-			content.WriteString("\n")
 			content.WriteString(scrollStyle.Render(scrollInfo))
+			content.WriteString("\n")
 		}
 	}
 
-	// Help text
+	// Help text (always at bottom)
 	content.WriteString("\n")
 	helpStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
 	content.WriteString(helpStyle.Render("  ↑↓: select • enter: apply • esc: cancel"))

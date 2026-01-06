@@ -32,31 +32,33 @@ var (
 // renderMultiPanelLayout renders the main multi-panel layout
 func (m *Model) renderMultiPanelLayout() string {
 	// Calculate dimensions
-	leftWidth := int(float64(m.width) * 0.6)
-	rightWidth := m.width - leftWidth - 4
+	// Top section: 30% of height for Filters + Now Playing
+	// Bottom section: 70% of height for Station List
+	topSectionHeight := int(float64(m.height) * 0.30)
+	bottomSectionHeight := m.height - topSectionHeight - 8
 
-	topRightHeight := 12
-	bottomRightHeight := m.height - topRightHeight - 8
+	// Top section split 50/50
+	halfWidth := m.width / 2
 
-	stationListHeight := m.height - 8
+	// Build top panels (side by side)
+	filtersPanel := m.renderFiltersPanel(halfWidth-3, topSectionHeight-2)
+	nowPlayingPanel := m.renderNowPlayingPanel(halfWidth-3, topSectionHeight-2)
 
-	// Build panels
-	stationListPanel := m.renderStationListPanel(leftWidth-2, stationListHeight)
-	nowPlayingPanel := m.renderNowPlayingPanel(rightWidth-2, topRightHeight-2)
-	filtersPanel := m.renderFiltersPanel(rightWidth-2, bottomRightHeight-2)
-
-	// Combine right panels vertically
-	rightColumn := lipgloss.JoinVertical(
-		lipgloss.Left,
-		nowPlayingPanel,
+	// Combine top panels horizontally
+	topRow := lipgloss.JoinHorizontal(
+		lipgloss.Top,
 		filtersPanel,
+		nowPlayingPanel,
 	)
 
-	// Combine left and right columns horizontally
-	mainContent := lipgloss.JoinHorizontal(
-		lipgloss.Top,
+	// Build bottom panel (full width)
+	stationListPanel := m.renderStationListPanel(m.width-4, bottomSectionHeight)
+
+	// Combine top and bottom
+	mainContent := lipgloss.JoinVertical(
+		lipgloss.Left,
+		topRow,
 		stationListPanel,
-		rightColumn,
 	)
 
 	// Add header and footer
@@ -74,7 +76,7 @@ func (m *Model) renderMultiPanelLayout() string {
 // renderHeader renders the app header
 func (m *Model) renderHeader() string {
 	title := titleStyle.Render("  rig.fm - Terminal Radio")
-	return title + "\n"
+	return title
 }
 
 // renderFooter renders the help footer
