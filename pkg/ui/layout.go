@@ -75,7 +75,7 @@ func (m *Model) renderMultiPanelLayout() string {
 
 // renderHeader renders the app header
 func (m *Model) renderHeader() string {
-	title := titleStyle.Render("  rig.fm - Terminal Radio")
+	title := titleStyle.Render(" rig.fm - Terminal Radio")
 	return title
 }
 
@@ -96,7 +96,7 @@ func (m *Model) renderFooter() string {
 		shortcuts = "1-4: edit filter • c: clear"
 	}
 
-	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • ?: help • q: quit",
+	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • ?: help • ctrl+c: quit",
 		m.focusedSection.String(),
 		shortcuts,
 	)
@@ -118,7 +118,7 @@ func (m *Model) renderStationListPanel(width, height int) string {
 	}
 
 	// Build content
-	title := titleStyle.Render(fmt.Sprintf(" Stations (%d) ", len(m.stations)))
+	title := titleStyle.Render(fmt.Sprintf("Stations (%d)", len(m.stations)))
 	content := m.stationList.View()
 
 	panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
@@ -134,15 +134,16 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	borderStyle := inactiveBorderStyle
 	titleStyle := panelTitleStyle
 
-	title := titleStyle.Render(" Now Playing ")
+	title := titleStyle.Render("Now Playing")
 
 	if m.nowPlaying == nil {
 		var content strings.Builder
 		content.WriteString("\n")
+		content.WriteString(" ")
 		content.WriteString(lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241")).
-			Render("  No station playing"))
-		content.WriteString("\n\n  Select a station and press Enter to play")
+			Render("No station playing"))
+		content.WriteString("\n\n Select a station and press Enter to play")
 
 		// No color bar when nothing is playing
 		panel := lipgloss.JoinVertical(lipgloss.Left, title, content.String())
@@ -165,25 +166,26 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	// Build station info
 	var info strings.Builder
 
+	info.WriteString("\n ")
 	info.WriteString(lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("205")).
 		Render(m.nowPlaying.Name))
-	info.WriteString("\n\n")
+	info.WriteString("\n\n ")
 
 	info.WriteString(fmt.Sprintf("%s • %s",
 		m.nowPlaying.Country,
 		m.nowPlaying.Codec))
-	info.WriteString("\n")
+	info.WriteString("\n ")
 
 	info.WriteString(fmt.Sprintf("Bitrate: %d kbps",
 		m.nowPlaying.Bitrate))
-	info.WriteString("\n\n")
+	info.WriteString("\n\n ")
 
 	info.WriteString(lipgloss.NewStyle().
 		Foreground(statusColor).
 		Render(status))
-	info.WriteString("\n")
+	info.WriteString("\n ")
 
 	info.WriteString(fmt.Sprintf("Volume: %d%%", vol))
 
@@ -191,7 +193,7 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	panel := lipgloss.JoinVertical(
 		lipgloss.Left,
 		title,
-		"\n"+info.String(),
+		info.String(),
 	)
 
 	return borderStyle.
@@ -209,7 +211,7 @@ func (m *Model) renderFiltersPanel(width, height int) string {
 		titleStyle = activePanelTitleStyle
 	}
 
-	title := titleStyle.Render(" Filters ")
+	title := titleStyle.Render("Filters")
 
 	var content string
 

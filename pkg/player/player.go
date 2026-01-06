@@ -37,14 +37,14 @@ type Player interface {
 
 // MPVPlayer is an mpv-based audio player
 type MPVPlayer struct {
-	cmd         *exec.Cmd
-	stdin       io.WriteCloser
-	stdout      io.ReadCloser
-	socketPath  string
-	state       State
-	currentURL  string
-	volume      int
-	mu          sync.RWMutex
+	cmd        *exec.Cmd
+	stdin      io.WriteCloser
+	stdout     io.ReadCloser
+	socketPath string
+	state      State
+	currentURL string
+	volume     int
+	mu         sync.RWMutex
 }
 
 // NewMPVPlayer creates a new mpv-based player
@@ -60,7 +60,7 @@ func NewMPVPlayer() (*MPVPlayer, error) {
 	return &MPVPlayer{
 		socketPath: socketPath,
 		state:      StateStopped,
-		volume:     100,
+		volume:     70,
 	}, nil
 }
 
@@ -76,9 +76,9 @@ func (p *MPVPlayer) Play(url string) error {
 
 	// Start mpv with IPC server
 	p.cmd = exec.Command("mpv",
-		"--no-video",              // Audio only
-		"--no-terminal",           // Don't take over terminal
-		"--input-ipc-server="+p.socketPath, // IPC socket for control
+		"--no-video",                            // Audio only
+		"--no-terminal",                         // Don't take over terminal
+		"--input-ipc-server="+p.socketPath,      // IPC socket for control
 		"--volume="+fmt.Sprintf("%d", p.volume), // Set volume
 		url,
 	)

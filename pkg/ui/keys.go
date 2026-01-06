@@ -16,7 +16,7 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	// Global shortcuts (work in any section)
 	switch msg.String() {
-	case "ctrl+c", "q":
+	case "ctrl+c":
 		m.stopPlayback()
 		return m, tea.Quit
 
@@ -64,7 +64,7 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "+", "=":
 		// Increase volume
 		vol, _ := m.player.GetVolume()
-		newVol := vol + 10
+		newVol := vol + 5
 		if newVol > 100 {
 			newVol = 100
 		}
@@ -74,7 +74,7 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "-", "_":
 		// Decrease volume
 		vol, _ := m.player.GetVolume()
-		newVol := vol - 10
+		newVol := vol - 5
 		if newVol < 0 {
 			newVol = 0
 		}

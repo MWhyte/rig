@@ -59,6 +59,11 @@ func (m *Model) initList() {
 	m.stationList.SetShowStatusBar(true)
 	m.stationList.SetFilteringEnabled(true)
 
+	// Disable default quit keys (q and esc) - we only want ctrl+c
+	m.stationList.KeyMap.Quit.SetEnabled(false)
+	m.stationList.KeyMap.ForceQuit.SetEnabled(false)
+	m.stationList.KeyMap.CloseFullHelp.SetEnabled(false)
+
 	if m.width > 0 && m.height > 0 {
 		m.stationList.SetSize(m.width, m.height-10)
 	}
@@ -97,7 +102,7 @@ func (m *Model) renderHelp() string {
   General:
     r              Refresh station list
     ?              Toggle this help
-    q or ctrl+c    Quit
+    ctrl+c         Quit
 
   ABOUT
 
