@@ -13,7 +13,8 @@
       "Bash(go run:*)",
       "Bash(mpv:*)",
       "Bash(timeout 3 ./rig:*)",
-      "Bash(go get:*)"
+      "Bash(go get:*)",
+      "Bash(curl:*)"
     ]
   }
 }

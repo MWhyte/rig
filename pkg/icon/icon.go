@@ -3,7 +3,6 @@ package icon
 import (
 	"fmt"
 	"image"
-	"image/color"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -18,14 +17,14 @@ import (
 
 const (
 	// With Braille: each character = 2x4 pixels
-	// So 12 chars wide = 24 pixels, 8 chars tall = 32 pixels
-	iconCharWidth  = 12
-	iconCharHeight = 8
-	iconWidth      = iconCharWidth * 2  // 24 pixels
-	iconHeight     = iconCharHeight * 4 // 32 pixels
+	// Smaller size: 8 chars wide = 16 pixels, 6 chars tall = 24 pixels
+	iconCharWidth  = 8
+	iconCharHeight = 6
+	iconWidth      = iconCharWidth * 2  // 16 pixels
+	iconHeight     = iconCharHeight * 4 // 24 pixels
 )
 
-// FetchAndRender downloads a favicon and renders it as terminal art
+// FetchAndRender downloads a favicon and renders it as a colored bar
 func FetchAndRender(url string) (string, error) {
 	if url == "" {
 		return renderPlaceholder(), nil
@@ -37,8 +36,8 @@ func FetchAndRender(url string) (string, error) {
 		return renderPlaceholder(), nil
 	}
 
-	// Render as terminal art
-	return renderImage(img), nil
+	// Extract dominant color and render as a simple colored bar
+	return renderColorBar(img), nil
 }
 
 // downloadImage downloads an image from a URL
@@ -155,36 +154,71 @@ func renderImage(img image.Image) string {
 	return result.String()
 }
 
-// renderPlaceholder renders a default icon when no favicon is available
+// renderPlaceholder renders a default colored bar when no favicon is available
 func renderPlaceholder() string {
-	// Create a simple radio icon
-	lines := []string{
-		"   ╭────────╮   ",
-		"   │  ◉  ◉ │   ",
-		"   │ ┌────┐│   ",
-		"   │ │━━━━││   ",
-		"   │ └────┘│   ",
-		"   │▓▓▓▓▓▓▓│   ",
-		"   ╰────────╯   ",
-		"      📻        ",
-	}
+	// Default color - nice green
+	style := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#86efac")).
+		Bold(true)
 
 	var result strings.Builder
-	for _, line := range lines {
-		result.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("86")).
-			Render(line))
+	for i := 0; i < 6; i++ {
+		result.WriteString(style.Render(" ███ "))
 		result.WriteString("\n")
 	}
 
 	return result.String()
 }
 
-// GetDominantColor returns the dominant color from an image
-func GetDominantColor(img image.Image) color.Color {
-	// Simple implementation: sample the center pixel
+// renderColorBar extracts dominant color and renders a simple colored bar
+func renderColorBar(img image.Image) string {
+	// Get dominant color
+	r, g, b := getDominantColor(img)
+
+	// Create a 3-character wide colored bar, 6 lines tall
+	colorHex := fmt.Sprintf("#%02x%02x%02x", r, g, b)
+	style := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(colorHex)).
+		Bold(true)
+
+	var result strings.Builder
+	for i := 0; i < 6; i++ {
+		result.WriteString(style.Render(" ███ "))
+		result.WriteString("\n")
+	}
+
+	return result.String()
+}
+
+// getDominantColor extracts the dominant color from an image
+func getDominantColor(img image.Image) (uint8, uint8, uint8) {
 	bounds := img.Bounds()
-	centerX := bounds.Min.X + (bounds.Max.X-bounds.Min.X)/2
-	centerY := bounds.Min.Y + (bounds.Max.Y-bounds.Min.Y)/2
-	return img.At(centerX, centerY)
+
+	// Sample multiple points and average
+	var totalR, totalG, totalB uint64
+	var count uint64
+
+	// Sample in a grid pattern
+	for y := bounds.Min.Y; y < bounds.Max.Y; y += bounds.Dy() / 10 {
+		for x := bounds.Min.X; x < bounds.Max.X; x += bounds.Dx() / 10 {
+			r, g, b, a := img.At(x, y).RGBA()
+
+			// Skip transparent pixels
+			if a < 32768 {
+				continue
+			}
+
+			totalR += uint64(r >> 8)
+			totalG += uint64(g >> 8)
+			totalB += uint64(b >> 8)
+			count++
+		}
+	}
+
+	if count == 0 {
+		// Fallback color
+		return 134, 239, 172 // Nice green
+	}
+
+	return uint8(totalR / count), uint8(totalG / count), uint8(totalB / count)
 }

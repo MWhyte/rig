@@ -150,9 +150,6 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 			Render(panel)
 	}
 
-	// Build station info (right side)
-	var info strings.Builder
-
 	status := "⏸ Paused"
 	statusColor := lipgloss.Color("208")
 	if m.isPlaying {
@@ -161,6 +158,9 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	}
 
 	vol, _ := m.player.GetVolume()
+
+	// Build station info (right side)
+	var info strings.Builder
 
 	info.WriteString(lipgloss.NewStyle().
 		Bold(true).
