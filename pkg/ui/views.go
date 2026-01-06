@@ -26,8 +26,20 @@ type StationItem struct {
 
 func (i StationItem) Title() string { return i.station.Name }
 func (i StationItem) Description() string {
-	return fmt.Sprintf("%s • %s • %d kbps • %d clicks",
+	// Format tags
+	tags := i.station.Tags
+	if tags == "" {
+		tags = "no tags"
+	} else {
+		// Limit to 25 chars for space
+		if len(tags) > 25 {
+			tags = tags[:22] + "..."
+		}
+	}
+
+	return fmt.Sprintf("%s • %s • %s • %d kbps • %d clicks",
 		i.station.Country,
+		tags,
 		i.station.Codec,
 		i.station.Bitrate,
 		i.station.ClickCount)

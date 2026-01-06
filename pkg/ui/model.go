@@ -28,6 +28,7 @@ const (
 	FilterCountry
 	FilterGenre
 	FilterLanguage
+	FilterStationName
 )
 
 // Filters represents the current filter state
@@ -36,6 +37,7 @@ type Filters struct {
 	CountryCode string
 	Genre       string
 	Language    string
+	StationName string
 }
 
 // Model is the main application model
@@ -70,6 +72,11 @@ type Model struct {
 	editingFilter FilterField
 	filterInput   textinput.Model
 
+	// Autocomplete
+	autocomplete     AutocompleteModel
+	autocompleteData map[FilterField][]string
+	stationNameCache map[string][]string
+
 	// Search
 	searchQuery string
 	searching   bool
@@ -95,13 +102,16 @@ func NewModel() (*Model, error) {
 	ti.CharLimit = 50
 
 	m := &Model{
-		view:           ViewLoading,
-		apiClient:      apiClient,
-		player:         p,
-		focusedSection: SectionStationList,
-		filters:        Filters{},
-		editingFilter:  FilterNone,
-		filterInput:    ti,
+		view:             ViewLoading,
+		apiClient:        apiClient,
+		player:           p,
+		focusedSection:   SectionStationList,
+		filters:          Filters{},
+		editingFilter:    FilterNone,
+		filterInput:      ti,
+		autocomplete:     NewAutocompleteModel(),
+		autocompleteData: make(map[FilterField][]string),
+		stationNameCache: make(map[string][]string),
 	}
 
 	return m, nil
@@ -148,10 +158,62 @@ func (m *Model) fetchMetadata() tea.Cmd {
 	}
 }
 
+// buildAutocompleteData builds autocomplete suggestions from metadata
+func (m *Model) buildAutocompleteData() {
+	// Country suggestions
+	countrySugs := make([]string, len(m.countries))
+	for i, c := range m.countries {
+		countrySugs[i] = fmt.Sprintf("%s (%d stations)", c.Name, c.StationCount)
+	}
+	m.autocompleteData[FilterCountry] = countrySugs
+
+	// Genre/Tag suggestions
+	tagSugs := make([]string, len(m.tags))
+	for i, t := range m.tags {
+		tagSugs[i] = fmt.Sprintf("%s (%d stations)", t.Name, t.StationCount)
+	}
+	m.autocompleteData[FilterGenre] = tagSugs
+
+	// Language suggestions
+	langSugs := make([]string, len(m.languages))
+	for i, l := range m.languages {
+		langSugs[i] = fmt.Sprintf("%s (%d stations)", l.Name, l.StationCount)
+	}
+	m.autocompleteData[FilterLanguage] = langSugs
+
+	// Station name suggestions are populated on-demand (not precomputed)
+}
+
+// fetchStationNameSuggestions fetches station name suggestions from the API
+func (m *Model) fetchStationNameSuggestions(query string) tea.Cmd {
+	return func() tea.Msg {
+		// Search by name
+		stations, err := m.apiClient.SearchByName(query)
+		if err != nil {
+			return errMsg{err}
+		}
+
+		// Limit to 10 suggestions
+		limit := 10
+		if len(stations) > limit {
+			stations = stations[:limit]
+		}
+
+		// Format suggestions as "Station Name (Country)"
+		suggestions := make([]string, len(stations))
+		for i, s := range stations {
+			suggestions[i] = fmt.Sprintf("%s (%s)", s.Name, s.Country)
+		}
+
+		return stationNameSuggestionsMsg{query, suggestions}
+	}
+}
+
 // fetchFilteredStations fetches stations based on current filters
 func (m *Model) fetchFilteredStations() tea.Cmd {
 	return func() tea.Msg {
 		params := radiobrowser.SearchParams{
+			Name:        m.filters.StationName,
 			CountryCode: m.filters.CountryCode,
 			Tag:         m.filters.Genre,
 			Language:    m.filters.Language,
@@ -181,6 +243,10 @@ type metadataLoadedMsg struct {
 type playStationMsg struct{ station *radiobrowser.Station }
 type stopPlaybackMsg struct{}
 type applyFiltersMsg struct{}
+type stationNameSuggestionsMsg struct {
+	query       string
+	suggestions []string
+}
 
 // Update handles messages and updates the model
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -211,6 +277,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.countries = msg.countries
 		m.tags = msg.tags
 		m.languages = msg.languages
+		m.buildAutocompleteData()
 		return m, nil
 
 	case applyFiltersMsg:
@@ -221,6 +288,17 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case stopPlaybackMsg:
 		m.stopPlayback()
+		return m, nil
+
+	case stationNameSuggestionsMsg:
+		// Cache the results
+		m.stationNameCache[msg.query] = msg.suggestions
+
+		// Update autocomplete if still editing station name and query matches
+		if m.editingFilter == FilterStationName && m.autocomplete.Value() == msg.query {
+			m.autocomplete.SetSuggestions(msg.suggestions)
+			m.autocomplete.Filter("") // Reset filter to show all suggestions
+		}
 		return m, nil
 
 	case errMsg:

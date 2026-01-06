@@ -91,7 +91,7 @@ func (m *Model) renderFooter() string {
 	case SectionStationList:
 		shortcuts = "↑↓/jk: navigate • enter: play • /: filter"
 	case SectionFilters:
-		shortcuts = "1-3: edit filter • c: clear"
+		shortcuts = "1-4: edit filter • c: clear"
 	}
 
 	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • ?: help • q: quit",
@@ -209,75 +209,76 @@ func (m *Model) renderFiltersPanel(width, height int) string {
 
 	title := titleStyle.Render(" Filters ")
 
-	var content strings.Builder
+	var content string
 
-	content.WriteString("\n")
-
-	// If editing a filter, show text input
+	// MODE 1: Editing - show autocomplete interface
 	if m.editingFilter != FilterNone {
-		var fieldName string
-		switch m.editingFilter {
-		case FilterCountry:
-			fieldName = "Country"
-		case FilterGenre:
-			fieldName = "Genre"
-		case FilterLanguage:
-			fieldName = "Language"
-		}
-
-		content.WriteString(fmt.Sprintf("  %s:\n", fieldName))
-		content.WriteString("  " + m.filterInput.View())
-		content.WriteString("\n\n")
-		content.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
-			Render("  Enter: apply • Esc: cancel"))
+		content = m.autocomplete.View(width-4, height-4)
 	} else {
-		// Country filter
-		countryText := "All Countries"
-		countryStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-		if m.filters.Country != "" {
-			countryText = m.filters.Country
-			countryStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
-		}
-		content.WriteString(fmt.Sprintf("  1. Country: %s", countryStyle.Render(countryText)))
-		content.WriteString("\n")
-
-		// Genre filter
-		genreText := "All Genres"
-		genreStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-		if m.filters.Genre != "" {
-			genreText = m.filters.Genre
-			genreStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
-		}
-		content.WriteString(fmt.Sprintf("  2. Genre: %s", genreStyle.Render(genreText)))
-		content.WriteString("\n")
-
-		// Language filter
-		langText := "All Languages"
-		langStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-		if m.filters.Language != "" {
-			langText = m.filters.Language
-			langStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
-		}
-		content.WriteString(fmt.Sprintf("  3. Language: %s", langStyle.Render(langText)))
-		content.WriteString("\n\n")
-
-		// Help text
-		if m.focusedSection == SectionFilters {
-			content.WriteString(lipgloss.NewStyle().
-				Foreground(lipgloss.Color("241")).
-				Render("  1-3: edit filter • c: clear"))
-		} else {
-			content.WriteString(lipgloss.NewStyle().
-				Foreground(lipgloss.Color("241")).
-				Render("  Press Tab to focus"))
-		}
+		// MODE 2: Normal - show 4 filter options
+		content = m.renderFilterList()
 	}
 
-	panel := lipgloss.JoinVertical(lipgloss.Left, title, content.String())
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
 
 	return borderStyle.
 		Width(width).
 		Height(height).
 		Render(panel)
+}
+
+// renderFilterList renders the normal filter list view
+func (m *Model) renderFilterList() string {
+	var content strings.Builder
+
+	content.WriteString("\n")
+
+	// 1. Country filter
+	countryText := "All Countries"
+	countryStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	if m.filters.Country != "" {
+		countryText = m.filters.Country
+		countryStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+	}
+	content.WriteString(fmt.Sprintf("  1. Country: %s\n", countryStyle.Render(countryText)))
+
+	// 2. Genre filter
+	genreText := "All Genres"
+	genreStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	if m.filters.Genre != "" {
+		genreText = m.filters.Genre
+		genreStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+	}
+	content.WriteString(fmt.Sprintf("  2. Genre: %s\n", genreStyle.Render(genreText)))
+
+	// 3. Language filter
+	langText := "All Languages"
+	langStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	if m.filters.Language != "" {
+		langText = m.filters.Language
+		langStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+	}
+	content.WriteString(fmt.Sprintf("  3. Language: %s\n", langStyle.Render(langText)))
+
+	// 4. Station Name filter (NEW)
+	nameText := "All Stations"
+	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	if m.filters.StationName != "" {
+		nameText = m.filters.StationName
+		nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+	}
+	content.WriteString(fmt.Sprintf("  4. Station: %s\n\n", nameStyle.Render(nameText)))
+
+	// Help text
+	if m.focusedSection == SectionFilters {
+		content.WriteString(lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			Render("  1-4: edit • c: clear"))
+	} else {
+		content.WriteString(lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			Render("  Press Tab to focus"))
+	}
+
+	return content.String()
 }

@@ -16,7 +16,9 @@
       "Bash(go get:*)",
       "Bash(curl:*)",
       "Bash(find:*)",
-      "Bash(go vet:*)"
+      "Bash(go vet:*)",
+      "Bash(go mod graph:*)",
+      "Bash(wc:*)"
     ]
   }
 }
