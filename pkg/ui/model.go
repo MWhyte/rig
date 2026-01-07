@@ -202,16 +202,17 @@ func (m *Model) buildAutocompleteData() {
 // fetchStationNameSuggestions fetches station name suggestions from the API
 func (m *Model) fetchStationNameSuggestions(query string) tea.Cmd {
 	return func() tea.Msg {
-		// Search by name
-		stations, err := m.apiClient.SearchByName(query)
+		// Use SearchStations with a limit for efficiency (only fetch what we need)
+		params := radiobrowser.SearchParams{
+			Name:       query,
+			Order:      "clickcount",
+			Reverse:    true,
+			Limit:      10, // Only fetch 10 stations for autocomplete
+			HideBroken: true,
+		}
+		stations, err := m.apiClient.SearchStations(params)
 		if err != nil {
 			return errMsg{err}
-		}
-
-		// Limit to 10 suggestions
-		limit := 10
-		if len(stations) > limit {
-			stations = stations[:limit]
 		}
 
 		// Format suggestions as "Station Name (Country)"
@@ -240,7 +241,7 @@ func (m *Model) fetchFilteredStations() tea.Cmd {
 			Language:    m.filters.Language,
 			Order:       "clickcount",
 			Reverse:     true,
-			Limit:       100,
+			Limit:       0, // No limit - show all matching stations
 			HideBroken:  true,
 		}
 

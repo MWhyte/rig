@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -13,6 +14,15 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// If editing a filter, handle input differently
 	if m.editingFilter != FilterNone {
 		return m.handleFilterInput(msg)
+	}
+
+	// If station list is filtering, pass keys to it first (except ctrl+c)
+	if m.focusedSection == SectionStationList && m.stationList.FilterState() == list.Filtering {
+		if msg.String() != "ctrl+c" {
+			var cmd tea.Cmd
+			m.stationList, cmd = m.stationList.Update(msg)
+			return m, cmd
+		}
 	}
 
 	// Global shortcuts (work in any section)
@@ -114,14 +124,6 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.view = ViewHelp
 		}
 		return m, nil
-
-	case "r":
-		// Refresh stations
-		m.view = ViewLoading
-		if m.hasActiveFilters() {
-			return m, m.fetchFilteredStations()
-		}
-		return m, m.fetchPopularStations()
 	}
 
 	// Section-specific shortcuts
@@ -163,12 +165,10 @@ func (m *Model) handleStationListKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "c":
-		// Clear all filters
+		// Clear all filters and return to popular stations
 		m.filters = Filters{}
 		m.editingFilter = FilterNone
-		return m, func() tea.Msg {
-			return applyFiltersMsg{}
-		}
+		return m, m.fetchPopularStations()
 
 	case "1":
 		// Edit country filter

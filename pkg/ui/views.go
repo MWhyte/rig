@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -78,6 +79,24 @@ func (m *Model) initList() {
 	m.stationList.SetShowStatusBar(true)
 	m.stationList.SetFilteringEnabled(true)
 
+	// Update help to include paging instructions
+	m.stationList.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			key.NewBinding(
+				key.WithKeys("left", "right"),
+				key.WithHelp("←/→", "page"),
+			),
+		}
+	}
+	m.stationList.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			key.NewBinding(
+				key.WithKeys("left", "right"),
+				key.WithHelp("←/→", "page up/down"),
+			),
+		}
+	}
+
 	// Disable default quit keys (q and esc) - we only want ctrl+c
 	m.stationList.KeyMap.Quit.SetEnabled(false)
 	m.stationList.KeyMap.ForceQuit.SetEnabled(false)
@@ -119,7 +138,6 @@ func (m *Model) renderHelp() string {
     - or _         Decrease volume
 
   General:
-    r              Refresh station list
     ?              Toggle this help
     ctrl+c         Quit
 

@@ -21,7 +21,8 @@
       "Bash(wc:*)",
       "Bash(go install:*)",
       "Bash(staticcheck:*)",
-      "Bash(gofmt:*)"
+      "Bash(gofmt:*)",
+      "Bash(grep:*)"
     ]
   }
 }

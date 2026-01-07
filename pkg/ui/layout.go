@@ -91,7 +91,7 @@ func (m *Model) renderFooter() string {
 
 	switch m.focusedSection {
 	case SectionStationList:
-		shortcuts = "↑↓/jk: navigate • ←→: page • enter/space: play • f: toggle fav"
+		shortcuts = "↑↓/jk: navigate • enter/space: play • f: toggle fav"
 	case SectionFilters:
 		shortcuts = "1-4: edit • 5: fav • c: clear"
 	}
