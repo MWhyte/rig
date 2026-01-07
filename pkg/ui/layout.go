@@ -93,7 +93,7 @@ func (m *Model) renderFooter() string {
 	case SectionStationList:
 		shortcuts = "↑↓/jk: navigate • enter/space: play • f: toggle fav"
 	case SectionFilters:
-		shortcuts = "1-4: edit • 5: fav • c: clear"
+		shortcuts = "↑↓/jk: select • enter: edit • c: clear"
 	}
 
 	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • ctrl+c: quit",
@@ -249,56 +249,74 @@ func (m *Model) renderFilterList() string {
 
 	content.WriteString("\n")
 
-	// 1. Country filter
-	countryText := "All Countries"
-	countryStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-	if m.filters.Country != "" {
-		countryText = m.filters.Country
-		countryStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+	// Define filter items
+	filters := []struct {
+		index   int
+		label   string
+		value   string
+		isEmpty bool
+	}{
+		{0, "Country", m.filters.Country, m.filters.Country == ""},
+		{1, "Genre", m.filters.Genre, m.filters.Genre == ""},
+		{2, "Language", m.filters.Language, m.filters.Language == ""},
+		{3, "Station", m.filters.StationName, m.filters.StationName == ""},
+		{4, "Favorites", "", false}, // Special case for favorites
 	}
-	content.WriteString(fmt.Sprintf("  1. Country: %s\n", countryStyle.Render(countryText)))
 
-	// 2. Genre filter
-	genreText := "All Genres"
-	genreStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-	if m.filters.Genre != "" {
-		genreText = m.filters.Genre
-		genreStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
-	}
-	content.WriteString(fmt.Sprintf("  2. Genre: %s\n", genreStyle.Render(genreText)))
+	for _, filter := range filters {
+		// Determine if this filter is selected
+		isSelected := (m.selectedFilterIndex == filter.index)
 
-	// 3. Language filter
-	langText := "All Languages"
-	langStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-	if m.filters.Language != "" {
-		langText = m.filters.Language
-		langStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
-	}
-	content.WriteString(fmt.Sprintf("  3. Language: %s\n", langStyle.Render(langText)))
+		// Build prefix (arrow for selected item)
+		prefix := "  "
+		if isSelected {
+			prefix = "→ "
+		}
 
-	// 4. Station Name filter
-	nameText := "All Stations"
-	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-	if m.filters.StationName != "" {
-		nameText = m.filters.StationName
-		nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
-	}
-	content.WriteString(fmt.Sprintf("  4. Station: %s\n", nameStyle.Render(nameText)))
+		// Build value text and style
+		var valueText string
+		var valueStyle lipgloss.Style
 
-	// 5. Favorites filter
-	favText := "All Stations"
-	favStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-	if m.filters.FavoritesOnly {
-		favText = "★ Only"
-		favStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+		if filter.index == 4 {
+			// Special handling for favorites
+			if m.filters.FavoritesOnly {
+				valueText = "★ Only"
+				valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+			} else {
+				valueText = "All Stations"
+				valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+			}
+		} else {
+			// Regular filters
+			if filter.isEmpty {
+				valueText = "All " + filter.label + "s"
+				valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+			} else {
+				valueText = filter.value
+				valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+			}
+		}
+
+		// Apply selection highlighting
+		if isSelected {
+			valueStyle = valueStyle.Bold(true).Foreground(lipgloss.Color("86"))
+		}
+
+		// Format line
+		content.WriteString(fmt.Sprintf("%s%d. %s: %s\n",
+			prefix,
+			filter.index+1,
+			filter.label,
+			valueStyle.Render(valueText)))
 	}
-	content.WriteString(fmt.Sprintf("  5. Favorites: %s\n\n", favStyle.Render(favText)))
+
+	content.WriteString("\n")
 
 	// Help text
 	if m.focusedSection == SectionFilters {
 		content.WriteString(lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241")).
-			Render("  1-4: edit • 5: fav • c: clear"))
+			Render("  ↑↓/jk: select • enter: edit • 1-5: direct • c: clear"))
 	} else {
 		content.WriteString(lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241")).

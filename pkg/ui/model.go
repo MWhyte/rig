@@ -68,12 +68,13 @@ type Model struct {
 	apiClient *radiobrowser.Client
 
 	// Filters
-	filters       Filters
-	countries     []radiobrowser.Country
-	tags          []radiobrowser.Tag
-	languages     []radiobrowser.Language
-	editingFilter FilterField
-	filterInput   textinput.Model
+	filters             Filters
+	countries           []radiobrowser.Country
+	tags                []radiobrowser.Tag
+	languages           []radiobrowser.Language
+	editingFilter       FilterField
+	filterInput         textinput.Model
+	selectedFilterIndex int // Tracks which filter is selected (0-4)
 
 	// Autocomplete
 	autocomplete     AutocompleteModel
@@ -114,17 +115,18 @@ func NewModel() (*Model, error) {
 	}
 
 	m := &Model{
-		view:             ViewLoading,
-		apiClient:        apiClient,
-		player:           p,
-		focusedSection:   SectionStationList,
-		filters:          Filters{},
-		editingFilter:    FilterNone,
-		filterInput:      ti,
-		autocomplete:     NewAutocompleteModel(),
-		autocompleteData: make(map[FilterField][]string),
-		stationNameCache: make(map[string][]string),
-		favManager:       favManager,
+		view:                ViewLoading,
+		apiClient:           apiClient,
+		player:              p,
+		focusedSection:      SectionStationList,
+		filters:             Filters{},
+		editingFilter:       FilterNone,
+		filterInput:         ti,
+		selectedFilterIndex: 0, // Start with first filter selected
+		autocomplete:        NewAutocompleteModel(),
+		autocompleteData:    make(map[FilterField][]string),
+		stationNameCache:    make(map[string][]string),
+		favManager:          favManager,
 	}
 
 	return m, nil

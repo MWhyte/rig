@@ -155,6 +155,80 @@ func (m *Model) handleStationListKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 // handleFiltersKeys handles keys when filters section is focused
 func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
+	case "up", "k":
+		// Navigate up through filters
+		if m.selectedFilterIndex > 0 {
+			m.selectedFilterIndex--
+		}
+		return m, nil
+
+	case "down", "j":
+		// Navigate down through filters
+		if m.selectedFilterIndex < 4 { // 0-4 = 5 filter options
+			m.selectedFilterIndex++
+		}
+		return m, nil
+
+	case "enter":
+		// Activate the selected filter
+		switch m.selectedFilterIndex {
+		case 0:
+			// Edit country filter
+			m.editingFilter = FilterCountry
+			m.filterInput.SetValue(m.filters.Country)
+			m.filterInput.Focus()
+			m.filterInput.Placeholder = "Enter country name..."
+			m.autocomplete.SetFieldName("Country")
+			m.autocomplete.SetSuggestions(m.autocompleteData[FilterCountry])
+			m.autocomplete.SetValue(m.filters.Country)
+			m.autocomplete.Filter(m.filters.Country)
+			return m, m.autocomplete.Focus()
+
+		case 1:
+			// Edit genre filter
+			m.editingFilter = FilterGenre
+			m.filterInput.SetValue(m.filters.Genre)
+			m.filterInput.Focus()
+			m.filterInput.Placeholder = "Enter genre/tag..."
+			m.autocomplete.SetFieldName("Genre")
+			m.autocomplete.SetSuggestions(m.autocompleteData[FilterGenre])
+			m.autocomplete.SetValue(m.filters.Genre)
+			m.autocomplete.Filter(m.filters.Genre)
+			return m, m.autocomplete.Focus()
+
+		case 2:
+			// Edit language filter
+			m.editingFilter = FilterLanguage
+			m.filterInput.SetValue(m.filters.Language)
+			m.filterInput.Focus()
+			m.filterInput.Placeholder = "Enter language..."
+			m.autocomplete.SetFieldName("Language")
+			m.autocomplete.SetSuggestions(m.autocompleteData[FilterLanguage])
+			m.autocomplete.SetValue(m.filters.Language)
+			m.autocomplete.Filter(m.filters.Language)
+			return m, m.autocomplete.Focus()
+
+		case 3:
+			// Edit station name filter
+			m.editingFilter = FilterStationName
+			m.filterInput.SetValue(m.filters.StationName)
+			m.filterInput.Focus()
+			m.filterInput.Placeholder = "Type station name..."
+			m.autocomplete.SetFieldName("Station")
+			m.autocomplete.SetSuggestions([]string{})
+			m.autocomplete.SetValue(m.filters.StationName)
+			return m, m.autocomplete.Focus()
+
+		case 4:
+			// Toggle favorites filter
+			m.filters.FavoritesOnly = !m.filters.FavoritesOnly
+			m.focusedSection = SectionStationList
+			return m, func() tea.Msg {
+				return applyFiltersMsg{}
+			}
+		}
+		return m, nil
+
 	case "c":
 		// Clear all filters and return to popular stations
 		m.filters = Filters{}
