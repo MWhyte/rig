@@ -220,6 +220,8 @@ func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "5":
 		// Toggle favorites filter
 		m.filters.FavoritesOnly = !m.filters.FavoritesOnly
+		// Switch focus to station list to see results
+		m.focusedSection = SectionStationList
 		return m, func() tea.Msg {
 			return applyFiltersMsg{}
 		}
@@ -262,6 +264,9 @@ func (m *Model) handleFilterInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.editingFilter = FilterNone
 		m.filterInput.Blur()
 		m.autocomplete.Blur()
+
+		// Switch focus to station list to see filtered results
+		m.focusedSection = SectionStationList
 
 		return m, func() tea.Msg {
 			return applyFiltersMsg{}

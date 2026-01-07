@@ -23,8 +23,8 @@ func main() {
 		}
 	}()
 
-	// Start the program with alternate screen buffer
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	// Start the program with alternate screen buffer and mouse support
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error running program: %v\n", err)
 		os.Exit(1)

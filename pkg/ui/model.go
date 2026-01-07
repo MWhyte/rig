@@ -344,6 +344,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return m, nil
 
+	case tea.MouseMsg:
+		// Handle mouse clicks to switch sections
+		if msg.Type == tea.MouseLeft {
+			return m.handleMouseClick(msg)
+		}
+		return m, nil
+
 	case tea.KeyMsg:
 		return m.handleKeyPress(msg)
 
@@ -419,6 +426,41 @@ func (m *Model) View() string {
 	default:
 		return "Unknown view\n"
 	}
+}
+
+// handleMouseClick handles mouse click events to switch sections
+func (m *Model) handleMouseClick(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
+	// Don't process clicks if not ready or in help view
+	if !m.ready || m.view != ViewStationList {
+		return m, nil
+	}
+
+	// Calculate layout boundaries (matching renderMultiPanelLayout)
+	topSectionHeight := int(float64(m.height) * 0.30)
+
+	// Header takes about 2 lines
+	headerHeight := 2
+
+	// Check if click is in top section (Filters area)
+	if msg.Y >= headerHeight && msg.Y < headerHeight+topSectionHeight {
+		// Top section - check if left half (Filters) or right half (Now Playing)
+		halfWidth := m.width / 2
+		if msg.X < halfWidth {
+			// Clicked on Filters section
+			m.focusedSection = SectionFilters
+		}
+		// Right half is Now Playing - not focusable, so ignore
+		return m, nil
+	}
+
+	// Check if click is in bottom section (Station List)
+	if msg.Y >= headerHeight+topSectionHeight {
+		// Clicked on Station List section
+		m.focusedSection = SectionStationList
+		return m, nil
+	}
+
+	return m, nil
 }
 
 // Close cleans up resources
