@@ -70,7 +70,11 @@ func (m *Model) initList() {
 
 	delegate := list.NewDefaultDelegate()
 	m.stationList = list.New(items, delegate, 0, 0)
-	m.stationList.Title = "Popular Radio Stations"
+
+	// Disable the built-in title - we render our own in the panel
+	m.stationList.Title = ""
+	m.stationList.SetShowTitle(false)
+
 	m.stationList.SetShowStatusBar(true)
 	m.stationList.SetFilteringEnabled(true)
 
