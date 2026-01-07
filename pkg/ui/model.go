@@ -20,7 +20,6 @@ type ViewMode int
 const (
 	ViewLoading ViewMode = iota
 	ViewStationList
-	ViewHelp
 )
 
 // FilterField represents which filter field is being edited
@@ -459,9 +458,6 @@ func (m *Model) View() string {
 	case ViewStationList:
 		return m.renderStationList()
 
-	case ViewHelp:
-		return m.renderHelp()
-
 	default:
 		return "Unknown view\n"
 	}
@@ -469,7 +465,7 @@ func (m *Model) View() string {
 
 // handleMouseClick handles mouse click events to switch sections
 func (m *Model) handleMouseClick(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
-	// Don't process clicks if not ready or in help view
+	// Don't process clicks if not ready or not in station list view
 	if !m.ready || m.view != ViewStationList {
 		return m, nil
 	}

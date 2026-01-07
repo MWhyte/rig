@@ -112,46 +112,6 @@ func (m *Model) renderStationList() string {
 	return m.renderMultiPanelLayout()
 }
 
-// renderHelp renders the help view
-func (m *Model) renderHelp() string {
-	help := `
-  ██████╗ ██╗ ██████╗     ███████╗███╗   ███╗
-  ██╔══██╗██║██╔════╝     ██╔════╝████╗ ████║
-  ██████╔╝██║██║  ███╗    █████╗  ██╔████╔██║
-  ██╔══██╗██║██║   ██║    ██╔══╝  ██║╚██╔╝██║
-  ██║  ██║██║╚██████╔╝    ██║     ██║ ╚═╝ ██║
-  ╚═╝  ╚═╝╚═╝ ╚═════╝     ╚═╝     ╚═╝     ╚═╝
-
-  The most beautiful terminal radio experience
-
-  KEYBOARD SHORTCUTS
-
-  Navigation:
-    ↑/↓ or j/k     Navigate station list
-    enter          Play selected station
-    /              Filter/search stations
-
-  Playback:
-    space          Pause/resume playback
-    s              Stop playback
-    + or =         Increase volume
-    - or _         Decrease volume
-
-  General:
-    ?              Toggle this help
-    ctrl+c         Quit
-
-  ABOUT
-
-  rig.fm is powered by Radio Browser (radio-browser.info)
-  A free, community-driven radio station database
-
-  Press ? to return to the station list
-`
-
-	return help
-}
-
 // playStation starts playing a station
 func (m *Model) playStation(station *radiobrowser.Station) (tea.Model, tea.Cmd) {
 	// Stop current playback

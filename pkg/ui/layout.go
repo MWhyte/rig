@@ -96,7 +96,7 @@ func (m *Model) renderFooter() string {
 		shortcuts = "1-4: edit • 5: fav • c: clear"
 	}
 
-	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • ?: help • ctrl+c: quit",
+	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • ctrl+c: quit",
 		m.focusedSection.String(),
 		shortcuts,
 	)

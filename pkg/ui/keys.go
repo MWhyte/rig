@@ -115,15 +115,6 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		return m, nil
-
-	case "?":
-		// Toggle help
-		if m.view == ViewHelp {
-			m.view = ViewStationList
-		} else {
-			m.view = ViewHelp
-		}
-		return m, nil
 	}
 
 	// Section-specific shortcuts
