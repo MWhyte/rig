@@ -161,4 +161,5 @@ func (m *Model) stopPlayback() {
 	}
 	m.nowPlaying = nil
 	m.isPlaying = false
+	m.currentSong = ""
 }

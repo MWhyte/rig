@@ -22,6 +22,18 @@ const (
 	StatePaused
 )
 
+// MPVResponse represents a response from MPV IPC
+type MPVResponse struct {
+	RequestID *int        `json:"request_id"`
+	Data      interface{} `json:"data"`
+	Error     string      `json:"error"`
+}
+
+// Metadata represents stream metadata
+type Metadata struct {
+	Title string // Current song
+}
+
 // Player interface defines the audio player operations
 type Player interface {
 	Play(url string) error
@@ -32,6 +44,7 @@ type Player interface {
 	GetVolume() (int, error)
 	GetState() State
 	IsPlaying() bool
+	GetMetadata() (*Metadata, error)
 	Close() error
 }
 
@@ -241,13 +254,12 @@ func (p *MPVPlayer) Close() error {
 	return p.Stop()
 }
 
-// sendCommand sends a JSON command to mpv via IPC socket
-func (p *MPVPlayer) sendCommand(cmd map[string]interface{}) error {
+// connectWithRetry connects to the MPV socket with retry logic
+func (p *MPVPlayer) connectWithRetry() (net.Conn, error) {
 	if p.socketPath == "" {
-		return fmt.Errorf("no socket path")
+		return nil, fmt.Errorf("no socket path")
 	}
 
-	// Wait a bit for socket to be ready if just started
 	maxRetries := 10
 	var conn net.Conn
 	var err error
@@ -255,13 +267,19 @@ func (p *MPVPlayer) sendCommand(cmd map[string]interface{}) error {
 	for i := 0; i < maxRetries; i++ {
 		conn, err = net.Dial("unix", p.socketPath)
 		if err == nil {
-			break
+			return conn, nil
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
 
+	return nil, fmt.Errorf("failed to connect to mpv socket after retries: %w", err)
+}
+
+// sendCommand sends a JSON command to mpv via IPC socket
+func (p *MPVPlayer) sendCommand(cmd map[string]interface{}) error {
+	conn, err := p.connectWithRetry()
 	if err != nil {
-		return fmt.Errorf("failed to connect to mpv socket: %w", err)
+		return err
 	}
 	defer conn.Close()
 
@@ -275,4 +293,61 @@ func (p *MPVPlayer) sendCommand(cmd map[string]interface{}) error {
 	}
 
 	return nil
+}
+
+// getProperty queries an MPV property and returns the response
+func (p *MPVPlayer) getProperty(property string) (interface{}, error) {
+	conn, err := p.connectWithRetry()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	// Set read/write deadlines
+	conn.SetDeadline(time.Now().Add(2 * time.Second))
+
+	// Send command
+	cmd := map[string]interface{}{
+		"command":    []interface{}{"get_property", property},
+		"request_id": 1,
+	}
+	encoder := json.NewEncoder(conn)
+	if err := encoder.Encode(cmd); err != nil {
+		return nil, fmt.Errorf("failed to send command: %w", err)
+	}
+
+	// Read response
+	decoder := json.NewDecoder(conn)
+	var response MPVResponse
+	if err := decoder.Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if response.Error != "success" && response.Error != "" {
+		return nil, fmt.Errorf("MPV error: %s", response.Error)
+	}
+
+	return response.Data, nil
+}
+
+// GetMetadata retrieves current playback metadata
+func (p *MPVPlayer) GetMetadata() (*Metadata, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if p.state == StateStopped {
+		return nil, fmt.Errorf("not playing")
+	}
+
+	metadata := &Metadata{}
+
+	// Get song title from icy-title only
+	// media-title fallback removed because it returns ugly URLs/filenames
+	if title, err := p.getProperty("metadata/icy-title"); err == nil {
+		if titleStr, ok := title.(string); ok {
+			metadata.Title = titleStr
+		}
+	}
+
+	return metadata, nil
 }

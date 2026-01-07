@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -85,6 +86,9 @@ type Model struct {
 	// Favorites
 	favManager *favorites.Manager
 
+	// Metadata
+	currentSong string
+
 	// Search
 	searchQuery string
 	searching   bool
@@ -138,6 +142,7 @@ func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
 		m.fetchPopularStations(),
 		m.fetchMetadata(),
+		m.tick(),
 	)
 }
 
@@ -312,6 +317,26 @@ func (m *Model) fetchFavoritesFiltered() tea.Cmd {
 	}
 }
 
+// tick returns a command that triggers metadata polling
+func (m *Model) tick() tea.Cmd {
+	return tea.Tick(5*time.Second, func(time.Time) tea.Msg {
+		return tickMsg{}
+	})
+}
+
+// pollMetadata queries the player for current metadata
+func (m *Model) pollMetadata() tea.Cmd {
+	return func() tea.Msg {
+		metadata, err := m.player.GetMetadata()
+		if err != nil {
+			// Silently fail - not critical
+			return metadataUpdateMsg{song: ""}
+		}
+
+		return metadataUpdateMsg{song: metadata.Title}
+	}
+}
+
 // Messages
 type errMsg struct{ err error }
 type stationsLoadedMsg struct{ stations []radiobrowser.Station }
@@ -326,6 +351,10 @@ type applyFiltersMsg struct{}
 type stationNameSuggestionsMsg struct {
 	query       string
 	suggestions []string
+}
+type tickMsg struct{}
+type metadataUpdateMsg struct {
+	song string
 }
 
 // Update handles messages and updates the model
@@ -386,6 +415,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.autocomplete.SetSuggestions(msg.suggestions)
 			m.autocomplete.Filter("") // Reset filter to show all suggestions
 		}
+		return m, nil
+
+	case tickMsg:
+		// Poll metadata if playing
+		if m.isPlaying && m.player != nil {
+			return m, tea.Batch(
+				m.tick(),         // Schedule next tick
+				m.pollMetadata(), // Poll current metadata
+			)
+		}
+		// Still tick even if not playing (for responsiveness when playback starts)
+		return m, m.tick()
+
+	case metadataUpdateMsg:
+		m.currentSong = msg.song
 		return m, nil
 
 	case errMsg:

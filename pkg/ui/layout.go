@@ -171,6 +171,18 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 		Bold(true).
 		Foreground(lipgloss.Color("205")).
 		Render(m.nowPlaying.Name))
+	info.WriteString("\n ")
+
+	// Current song metadata
+	if m.currentSong != "" {
+		info.WriteString(lipgloss.NewStyle().
+			Foreground(lipgloss.Color("86")).
+			Render(m.currentSong))
+	} else {
+		info.WriteString(lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			Render("(No song info)"))
+	}
 	info.WriteString("\n\n ")
 
 	info.WriteString(fmt.Sprintf("%s • %s",
