@@ -51,7 +51,6 @@ type Player interface {
 // MPVPlayer is an mpv-based audio player
 type MPVPlayer struct {
 	cmd        *exec.Cmd
-	stdin      io.WriteCloser
 	stdout     io.ReadCloser
 	socketPath string
 	state      State

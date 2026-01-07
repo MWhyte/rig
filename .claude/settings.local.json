@@ -18,7 +18,10 @@
       "Bash(find:*)",
       "Bash(go vet:*)",
       "Bash(go mod graph:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(go install:*)",
+      "Bash(staticcheck:*)",
+      "Bash(gofmt:*)"
     ]
   }
 }

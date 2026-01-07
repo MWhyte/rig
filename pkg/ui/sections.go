@@ -5,14 +5,12 @@ type Section int
 
 const (
 	SectionStationList Section = iota
-	SectionNowPlaying
 	SectionFilters
 )
 
 // sectionNames maps sections to their display names
 var sectionNames = map[Section]string{
 	SectionStationList: "Station List",
-	SectionNowPlaying:  "Now Playing",
 	SectionFilters:     "Filters",
 }
 

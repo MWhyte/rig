@@ -133,50 +133,6 @@ func (c *Client) get(endpoint string) ([]byte, error) {
 	return nil, fmt.Errorf("all servers failed with no error")
 }
 
-// post performs a POST request to the API with automatic server fallback
-func (c *Client) post(endpoint string, body io.Reader) ([]byte, error) {
-	var lastErr error
-
-	for _, server := range c.servers {
-		url := fmt.Sprintf("%s%s", server, endpoint)
-
-		req, err := http.NewRequest("POST", url, body)
-		if err != nil {
-			lastErr = err
-			continue
-		}
-
-		req.Header.Set("User-Agent", c.userAgent)
-		req.Header.Set("Content-Type", "application/json")
-
-		resp, err := c.httpClient.Do(req)
-		if err != nil {
-			lastErr = err
-			continue
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			lastErr = fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
-			continue
-		}
-
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			lastErr = err
-			continue
-		}
-
-		return respBody, nil
-	}
-
-	if lastErr != nil {
-		return nil, fmt.Errorf("all servers failed, last error: %w", lastErr)
-	}
-
-	return nil, fmt.Errorf("all servers failed with no error")
-}
-
 // unmarshalJSON is a helper to unmarshal JSON responses
 func unmarshalJSON(data []byte, v interface{}) error {
 	if err := json.Unmarshal(data, v); err != nil {

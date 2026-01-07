@@ -20,7 +20,6 @@ type ViewMode int
 const (
 	ViewLoading ViewMode = iota
 	ViewStationList
-	ViewSearch
 	ViewHelp
 )
 
@@ -33,7 +32,6 @@ const (
 	FilterGenre
 	FilterLanguage
 	FilterStationName
-	FilterFavorites
 )
 
 // Filters represents the current filter state
@@ -88,10 +86,6 @@ type Model struct {
 
 	// Metadata
 	currentSong string
-
-	// Search
-	searchQuery string
-	searching   bool
 }
 
 // NewModel creates a new application model
