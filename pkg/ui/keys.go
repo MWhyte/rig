@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -46,10 +47,12 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		} else if m.focusedSection == SectionStationList && len(m.stations) > 0 {
 			// No station playing and in station list - play selected station
-			selected := m.stationList.Index()
-			if selected >= 0 && selected < len(m.stations) {
-				return m, func() tea.Msg {
-					return playStationMsg{&m.stations[selected]}
+			// Get the actual selected item from the filtered list
+			if item := m.stationList.SelectedItem(); item != nil {
+				if stationItem, ok := item.(StationItem); ok {
+					return m, func() tea.Msg {
+						return playStationMsg{&stationItem.station}
+					}
 				}
 			}
 		}
@@ -79,6 +82,28 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			newVol = 0
 		}
 		_ = m.player.SetVolume(newVol)
+		return m, nil
+
+	case "f":
+		// Toggle favorite for selected station
+		if m.focusedSection == SectionStationList && len(m.stations) > 0 {
+			// Get the actual selected item from the filtered list
+			if item := m.stationList.SelectedItem(); item != nil {
+				if stationItem, ok := item.(StationItem); ok {
+					if m.favManager != nil {
+						if err := m.favManager.Toggle(
+							stationItem.station.StationUUID,
+							stationItem.station.Name,
+							stationItem.station.URLResolved,
+						); err != nil {
+							m.err = fmt.Errorf("failed to save favorite: %w", err)
+						}
+						// Refresh list to update ★ indicator
+						m.initList()
+					}
+				}
+			}
+		}
 		return m, nil
 
 	case "?":
@@ -117,10 +142,12 @@ func (m *Model) handleStationListKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "enter":
 		// Play selected station
 		if m.view == ViewStationList && len(m.stations) > 0 {
-			selected := m.stationList.Index()
-			if selected >= 0 && selected < len(m.stations) {
-				return m, func() tea.Msg {
-					return playStationMsg{&m.stations[selected]}
+			// Get the actual selected item from the filtered list
+			if item := m.stationList.SelectedItem(); item != nil {
+				if stationItem, ok := item.(StationItem); ok {
+					return m, func() tea.Msg {
+						return playStationMsg{&stationItem.station}
+					}
 				}
 			}
 		}
@@ -189,6 +216,13 @@ func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.autocomplete.SetSuggestions([]string{}) // Empty until typing
 		m.autocomplete.SetValue(m.filters.StationName)
 		return m, m.autocomplete.Focus()
+
+	case "5":
+		// Toggle favorites filter
+		m.filters.FavoritesOnly = !m.filters.FavoritesOnly
+		return m, func() tea.Msg {
+			return applyFiltersMsg{}
+		}
 	}
 
 	return m, nil
@@ -334,5 +368,6 @@ func (m *Model) hasActiveFilters() bool {
 	return m.filters.CountryCode != "" ||
 		m.filters.Genre != "" ||
 		m.filters.Language != "" ||
-		m.filters.StationName != ""
+		m.filters.StationName != "" ||
+		m.filters.FavoritesOnly
 }

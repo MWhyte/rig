@@ -91,9 +91,9 @@ func (m *Model) renderFooter() string {
 
 	switch m.focusedSection {
 	case SectionStationList:
-		shortcuts = "↑↓/jk: navigate • enter: play • /: filter"
+		shortcuts = "↑↓/jk: navigate • enter/space: play • f: favorite"
 	case SectionFilters:
-		shortcuts = "1-4: edit filter • c: clear"
+		shortcuts = "1-4: edit • 5: fav • c: clear"
 	}
 
 	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • ?: help • ctrl+c: quit",
@@ -264,20 +264,29 @@ func (m *Model) renderFilterList() string {
 	}
 	content.WriteString(fmt.Sprintf("  3. Language: %s\n", langStyle.Render(langText)))
 
-	// 4. Station Name filter (NEW)
+	// 4. Station Name filter
 	nameText := "All Stations"
 	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
 	if m.filters.StationName != "" {
 		nameText = m.filters.StationName
 		nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
 	}
-	content.WriteString(fmt.Sprintf("  4. Station: %s\n\n", nameStyle.Render(nameText)))
+	content.WriteString(fmt.Sprintf("  4. Station: %s\n", nameStyle.Render(nameText)))
+
+	// 5. Favorites filter
+	favText := "All Stations"
+	favStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	if m.filters.FavoritesOnly {
+		favText = "★ Only"
+		favStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+	}
+	content.WriteString(fmt.Sprintf("  5. Favorites: %s\n\n", favStyle.Render(favText)))
 
 	// Help text
 	if m.focusedSection == SectionFilters {
 		content.WriteString(lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241")).
-			Render("  1-4: edit • c: clear"))
+			Render("  1-4: edit • 5: fav • c: clear"))
 	} else {
 		content.WriteString(lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241")).

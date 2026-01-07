@@ -2,10 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mrwhyte/rig/pkg/favorites"
 	"github.com/mrwhyte/rig/pkg/player"
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
 )
@@ -29,15 +32,17 @@ const (
 	FilterGenre
 	FilterLanguage
 	FilterStationName
+	FilterFavorites
 )
 
 // Filters represents the current filter state
 type Filters struct {
-	Country     string
-	CountryCode string
-	Genre       string
-	Language    string
-	StationName string
+	Country       string
+	CountryCode   string
+	Genre         string
+	Language      string
+	StationName   string
+	FavoritesOnly bool
 }
 
 // Model is the main application model
@@ -77,6 +82,9 @@ type Model struct {
 	autocompleteData map[FilterField][]string
 	stationNameCache map[string][]string
 
+	// Favorites
+	favManager *favorites.Manager
+
 	// Search
 	searchQuery string
 	searching   bool
@@ -101,6 +109,13 @@ func NewModel() (*Model, error) {
 	ti.Placeholder = "Type to filter..."
 	ti.CharLimit = 50
 
+	// Create favorites manager
+	favManager, err := favorites.NewManager()
+	if err != nil {
+		// Log error but don't fail - favorites not critical
+		fmt.Fprintf(os.Stderr, "Warning: Could not load favorites: %v\n", err)
+	}
+
 	m := &Model{
 		view:             ViewLoading,
 		apiClient:        apiClient,
@@ -112,6 +127,7 @@ func NewModel() (*Model, error) {
 		autocomplete:     NewAutocompleteModel(),
 		autocompleteData: make(map[FilterField][]string),
 		stationNameCache: make(map[string][]string),
+		favManager:       favManager,
 	}
 
 	return m, nil
@@ -212,6 +228,12 @@ func (m *Model) fetchStationNameSuggestions(query string) tea.Cmd {
 // fetchFilteredStations fetches stations based on current filters
 func (m *Model) fetchFilteredStations() tea.Cmd {
 	return func() tea.Msg {
+		// If favorites-only mode, get favorites and filter by other criteria
+		if m.filters.FavoritesOnly {
+			return m.fetchFavoritesFiltered()()
+		}
+
+		// Normal API search with filters
 		params := radiobrowser.SearchParams{
 			Name:        m.filters.StationName,
 			CountryCode: m.filters.CountryCode,
@@ -229,6 +251,64 @@ func (m *Model) fetchFilteredStations() tea.Cmd {
 		}
 
 		return stationsLoadedMsg{stations}
+	}
+}
+
+// fetchFavoritesFiltered fetches favorites and applies other filters
+func (m *Model) fetchFavoritesFiltered() tea.Cmd {
+	return func() tea.Msg {
+		// Get all favorite UUIDs
+		if m.favManager == nil {
+			return stationsLoadedMsg{stations: []radiobrowser.Station{}}
+		}
+
+		favs := m.favManager.GetAll()
+		if len(favs) == 0 {
+			return stationsLoadedMsg{stations: []radiobrowser.Station{}}
+		}
+
+		// Search by UUIDs to get fresh metadata from API
+		uuids := make([]string, len(favs))
+		for i, fav := range favs {
+			uuids[i] = fav.StationUUID
+		}
+
+		stations, err := m.apiClient.SearchByUUIDs(uuids)
+		if err != nil {
+			return errMsg{err}
+		}
+
+		// Apply other filters client-side
+		filtered := make([]radiobrowser.Station, 0, len(stations))
+		for _, station := range stations {
+			// Check country filter
+			if m.filters.CountryCode != "" && station.CountryCode != m.filters.CountryCode {
+				continue
+			}
+
+			// Check genre filter (tags contain genre)
+			if m.filters.Genre != "" {
+				if !strings.Contains(strings.ToLower(station.Tags), strings.ToLower(m.filters.Genre)) {
+					continue
+				}
+			}
+
+			// Check language filter
+			if m.filters.Language != "" && !strings.EqualFold(station.Language, m.filters.Language) {
+				continue
+			}
+
+			// Check station name filter
+			if m.filters.StationName != "" {
+				if !strings.Contains(strings.ToLower(station.Name), strings.ToLower(m.filters.StationName)) {
+					continue
+				}
+			}
+
+			filtered = append(filtered, station)
+		}
+
+		return stationsLoadedMsg{stations: filtered}
 	}
 }
 

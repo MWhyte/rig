@@ -156,6 +156,28 @@ func (c *Client) GetStationByUUID(uuid string) (*Station, error) {
 	return &stations[0], nil
 }
 
+// SearchByUUIDs searches for stations by their UUIDs
+func (c *Client) SearchByUUIDs(uuids []string) ([]Station, error) {
+	if len(uuids) == 0 {
+		return []Station{}, nil
+	}
+
+	// Fetch each station individually
+	// This is reliable and works for a reasonable number of favorites
+	stations := make([]Station, 0, len(uuids))
+
+	for _, uuid := range uuids {
+		station, err := c.GetStationByUUID(uuid)
+		if err != nil {
+			// Skip stations that can't be found (may have been removed from API)
+			continue
+		}
+		stations = append(stations, *station)
+	}
+
+	return stations, nil
+}
+
 // GetTopStations retrieves the top stations by vote count
 func (c *Client) GetTopStations(limit int) ([]Station, error) {
 	params := SearchParams{

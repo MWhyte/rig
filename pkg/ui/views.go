@@ -21,10 +21,18 @@ var (
 
 // StationItem implements list.Item for station list
 type StationItem struct {
-	station radiobrowser.Station
+	station    radiobrowser.Station
+	isFavorite bool
 }
 
-func (i StationItem) Title() string { return i.station.Name }
+func (i StationItem) Title() string {
+	name := i.station.Name
+	// Add ★ if favorited
+	if i.isFavorite {
+		name = name + " ★"
+	}
+	return name
+}
 func (i StationItem) Description() string {
 	// Format tags
 	tags := i.station.Tags
@@ -50,7 +58,14 @@ func (i StationItem) FilterValue() string { return i.station.Name }
 func (m *Model) initList() {
 	items := make([]list.Item, len(m.stations))
 	for i, station := range m.stations {
-		items[i] = StationItem{station: station}
+		isFavorite := false
+		if m.favManager != nil {
+			isFavorite = m.favManager.IsFavorite(station.StationUUID)
+		}
+		items[i] = StationItem{
+			station:    station,
+			isFavorite: isFavorite,
+		}
 	}
 
 	delegate := list.NewDefaultDelegate()
