@@ -211,6 +211,16 @@ func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// Toggle favorites filter
 			m.filters.FavoritesOnly = !m.filters.FavoritesOnly
 			m.focusedSection = SectionStationList
+
+			// If turning off favorites and no other filters are active, return to popular stations
+			if !m.filters.FavoritesOnly &&
+				m.filters.CountryCode == "" &&
+				m.filters.Genre == "" &&
+				m.filters.Language == "" &&
+				m.filters.StationName == "" {
+				return m, m.fetchPopularStations()
+			}
+
 			return m, func() tea.Msg {
 				return applyFiltersMsg{}
 			}
@@ -263,6 +273,16 @@ func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.filters.FavoritesOnly = !m.filters.FavoritesOnly
 		// Switch focus to station list to see results
 		m.focusedSection = SectionStationList
+
+		// If turning off favorites and no other filters are active, return to popular stations
+		if !m.filters.FavoritesOnly &&
+			m.filters.CountryCode == "" &&
+			m.filters.Genre == "" &&
+			m.filters.Language == "" &&
+			m.filters.StationName == "" {
+			return m, m.fetchPopularStations()
+		}
+
 		return m, func() tea.Msg {
 			return applyFiltersMsg{}
 		}
