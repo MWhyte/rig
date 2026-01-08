@@ -164,3 +164,10 @@ Name your favorites with custom aliases.
 - Keep keyboard-first design
 - Performance should not degrade with new features
 - Consider mobile/SSH use cases (low bandwidth, no mouse)
+
+
+
+# BUGS
+- mpv seems to hog battery
+- toggling off favourites view shows all stations instead of top 100
+- 

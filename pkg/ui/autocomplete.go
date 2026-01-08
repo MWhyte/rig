@@ -23,7 +23,7 @@ type AutocompleteModel struct {
 // NewAutocompleteModel creates a new autocomplete model
 func NewAutocompleteModel() AutocompleteModel {
 	ti := textinput.New()
-	ti.Placeholder = "Type to search..."
+	ti.Placeholder = "" // Empty placeholder to avoid rendering bug
 	ti.CharLimit = 50
 
 	return AutocompleteModel{
@@ -194,9 +194,21 @@ func (m *AutocompleteModel) Blur() {
 	m.textInput.Blur()
 }
 
-// SetValue sets the text input value
+// SetValue sets the text input value and resets cursor position
 func (m *AutocompleteModel) SetValue(value string) {
 	m.textInput.SetValue(value)
+	m.textInput.SetCursor(len(value)) // Move cursor to end
+}
+
+// Reset creates a fresh textinput with the given initial value
+func (m *AutocompleteModel) Reset(initialValue string) {
+	// Create a completely new textinput to avoid cursor/state issues
+	ti := textinput.New()
+	ti.Placeholder = "" // Empty placeholder to avoid rendering bug
+	ti.CharLimit = 50
+	ti.SetValue(initialValue)
+	ti.SetCursor(len(initialValue))
+	m.textInput = ti
 }
 
 // Value returns the current text input value

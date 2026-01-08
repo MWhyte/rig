@@ -205,11 +205,14 @@ func (m *Model) fetchStationNameSuggestions(query string) tea.Cmd {
 	return func() tea.Msg {
 		// Use SearchStations with a limit for efficiency (only fetch what we need)
 		params := radiobrowser.SearchParams{
-			Name:       query,
-			Order:      "clickcount",
-			Reverse:    true,
-			Limit:      10, // Only fetch 10 stations for autocomplete
-			HideBroken: true,
+			Name:        query,
+			CountryCode: m.filters.CountryCode, // Respect country filter
+			Tag:         m.filters.Genre,       // Respect genre filter
+			Language:    m.filters.Language,    // Respect language filter
+			Order:       "clickcount",
+			Reverse:     true,
+			Limit:       10, // Only fetch 10 stations for autocomplete
+			HideBroken:  true,
 		}
 		stations, err := m.apiClient.SearchStations(params)
 		if err != nil {

@@ -175,48 +175,36 @@ func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case 0:
 			// Edit country filter
 			m.editingFilter = FilterCountry
-			m.filterInput.SetValue(m.filters.Country)
-			m.filterInput.Focus()
-			m.filterInput.Placeholder = "Enter country name..."
+			m.autocomplete.Reset(m.filters.Country) // Create fresh textinput with current value
 			m.autocomplete.SetFieldName("Country")
 			m.autocomplete.SetSuggestions(m.autocompleteData[FilterCountry])
-			m.autocomplete.SetValue(m.filters.Country)
 			m.autocomplete.Filter(m.filters.Country)
 			return m, m.autocomplete.Focus()
 
 		case 1:
 			// Edit genre filter
 			m.editingFilter = FilterGenre
-			m.filterInput.SetValue(m.filters.Genre)
-			m.filterInput.Focus()
-			m.filterInput.Placeholder = "Enter genre/tag..."
+			m.autocomplete.Reset(m.filters.Genre) // Create fresh textinput with current value
 			m.autocomplete.SetFieldName("Genre")
 			m.autocomplete.SetSuggestions(m.autocompleteData[FilterGenre])
-			m.autocomplete.SetValue(m.filters.Genre)
 			m.autocomplete.Filter(m.filters.Genre)
 			return m, m.autocomplete.Focus()
 
 		case 2:
 			// Edit language filter
 			m.editingFilter = FilterLanguage
-			m.filterInput.SetValue(m.filters.Language)
-			m.filterInput.Focus()
-			m.filterInput.Placeholder = "Enter language..."
+			m.autocomplete.Reset(m.filters.Language) // Create fresh textinput with current value
 			m.autocomplete.SetFieldName("Language")
 			m.autocomplete.SetSuggestions(m.autocompleteData[FilterLanguage])
-			m.autocomplete.SetValue(m.filters.Language)
 			m.autocomplete.Filter(m.filters.Language)
 			return m, m.autocomplete.Focus()
 
 		case 3:
 			// Edit station name filter
 			m.editingFilter = FilterStationName
-			m.filterInput.SetValue(m.filters.StationName)
-			m.filterInput.Focus()
-			m.filterInput.Placeholder = "Type station name..."
+			m.autocomplete.Reset(m.filters.StationName) // Create fresh textinput with current value
 			m.autocomplete.SetFieldName("Station")
 			m.autocomplete.SetSuggestions([]string{})
-			m.autocomplete.SetValue(m.filters.StationName)
 			return m, m.autocomplete.Focus()
 
 		case 4:
@@ -238,48 +226,36 @@ func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "1":
 		// Edit country filter
 		m.editingFilter = FilterCountry
-		m.filterInput.SetValue(m.filters.Country)
-		m.filterInput.Focus()
-		m.filterInput.Placeholder = "Enter country name..."
+		m.autocomplete.Reset(m.filters.Country) // Create fresh textinput with current value
 		m.autocomplete.SetFieldName("Country")
 		m.autocomplete.SetSuggestions(m.autocompleteData[FilterCountry])
-		m.autocomplete.SetValue(m.filters.Country)
 		m.autocomplete.Filter(m.filters.Country)
 		return m, m.autocomplete.Focus()
 
 	case "2":
 		// Edit genre filter
 		m.editingFilter = FilterGenre
-		m.filterInput.SetValue(m.filters.Genre)
-		m.filterInput.Focus()
-		m.filterInput.Placeholder = "Enter genre/tag..."
+		m.autocomplete.Reset(m.filters.Genre) // Create fresh textinput with current value
 		m.autocomplete.SetFieldName("Genre")
 		m.autocomplete.SetSuggestions(m.autocompleteData[FilterGenre])
-		m.autocomplete.SetValue(m.filters.Genre)
 		m.autocomplete.Filter(m.filters.Genre)
 		return m, m.autocomplete.Focus()
 
 	case "3":
 		// Edit language filter
 		m.editingFilter = FilterLanguage
-		m.filterInput.SetValue(m.filters.Language)
-		m.filterInput.Focus()
-		m.filterInput.Placeholder = "Enter language..."
+		m.autocomplete.Reset(m.filters.Language) // Create fresh textinput with current value
 		m.autocomplete.SetFieldName("Language")
 		m.autocomplete.SetSuggestions(m.autocompleteData[FilterLanguage])
-		m.autocomplete.SetValue(m.filters.Language)
 		m.autocomplete.Filter(m.filters.Language)
 		return m, m.autocomplete.Focus()
 
 	case "4":
 		// Edit station name filter
 		m.editingFilter = FilterStationName
-		m.filterInput.SetValue(m.filters.StationName)
-		m.filterInput.Focus()
-		m.filterInput.Placeholder = "Type station name..."
+		m.autocomplete.Reset(m.filters.StationName) // Create fresh textinput with current value
 		m.autocomplete.SetFieldName("Station")
 		m.autocomplete.SetSuggestions([]string{}) // Empty until typing
-		m.autocomplete.SetValue(m.filters.StationName)
 		return m, m.autocomplete.Focus()
 
 	case "5":
@@ -306,7 +282,6 @@ func (m *Model) handleFilterInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "esc":
 		// Cancel editing
 		m.editingFilter = FilterNone
-		m.filterInput.Blur()
 		m.autocomplete.Blur()
 		return m, nil
 
@@ -327,18 +302,17 @@ func (m *Model) handleFilterInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.applyFilterValue(value)
 
 		m.editingFilter = FilterNone
-		m.filterInput.Blur()
 		m.autocomplete.Blur()
 
-		// Switch focus to station list to see filtered results
-		m.focusedSection = SectionStationList
+		// Stay in filters section so user can add more filters
+		// (User can Tab to station list when ready)
 
 		return m, func() tea.Msg {
 			return applyFiltersMsg{}
 		}
 
-	case "up", "k", "down", "j":
-		// Navigate autocomplete suggestions
+	case "up", "down":
+		// Navigate autocomplete suggestions (only arrow keys, so j/k can be typed)
 		var cmd tea.Cmd
 		m.autocomplete, cmd = m.autocomplete.Update(msg)
 		return m, cmd
