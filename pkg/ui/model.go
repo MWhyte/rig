@@ -318,7 +318,7 @@ func (m *Model) fetchFavoritesFiltered() tea.Cmd {
 
 // tick returns a command that triggers metadata polling
 func (m *Model) tick() tea.Cmd {
-	return tea.Tick(5*time.Second, func(time.Time) tea.Msg {
+	return tea.Tick(10*time.Second, func(time.Time) tea.Msg {
 		return tickMsg{}
 	})
 }

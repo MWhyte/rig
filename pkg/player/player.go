@@ -86,12 +86,16 @@ func (p *MPVPlayer) Play(url string) error {
 		p.stopLocked()
 	}
 
-	// Start mpv with IPC server
+	// Start mpv with IPC server and battery optimization flags
 	p.cmd = exec.Command("mpv",
 		"--no-video",                            // Audio only
 		"--no-terminal",                         // Don't take over terminal
 		"--input-ipc-server="+p.socketPath,      // IPC socket for control
 		"--volume="+fmt.Sprintf("%d", p.volume), // Set volume
+		"--cache=yes",                           // Enable caching
+		"--cache-secs=5",                        // Small buffer for streaming
+		"--demuxer-max-bytes=500K",              // Limit memory usage
+		"--audio-buffer=0.2",                    // Small audio buffer
 		url,
 	)
 
