@@ -86,6 +86,14 @@ type Model struct {
 
 	// Metadata
 	currentSong string
+
+	// Sleep Timer
+	sleepTimerActive    bool
+	sleepTimerDuration  time.Duration // Total duration (e.g., 30min)
+	sleepTimerRemaining time.Duration // Time left
+	sleepTimerStart     time.Time     // When timer started
+	showTimerModal      bool          // Show timer configuration modal
+	timerInput          textinput.Model
 }
 
 // NewModel creates a new application model
@@ -107,6 +115,12 @@ func NewModel() (*Model, error) {
 	ti.Placeholder = "Type to filter..."
 	ti.CharLimit = 50
 
+	// Create timer input
+	timerInput := textinput.New()
+	timerInput.Placeholder = "Enter minutes (e.g., 30)"
+	timerInput.CharLimit = 4
+	timerInput.Width = 30
+
 	// Create favorites manager
 	favManager, err := favorites.NewManager()
 	if err != nil {
@@ -127,6 +141,7 @@ func NewModel() (*Model, error) {
 		autocompleteData:    make(map[FilterField][]string),
 		stationNameCache:    make(map[string][]string),
 		favManager:          favManager,
+		timerInput:          timerInput,
 	}
 
 	return m, nil
@@ -323,6 +338,13 @@ func (m *Model) tick() tea.Cmd {
 	})
 }
 
+// sleepTimerTick returns a command that triggers timer countdown
+func (m *Model) sleepTimerTick() tea.Cmd {
+	return tea.Tick(1*time.Second, func(time.Time) tea.Msg {
+		return sleepTimerTickMsg{}
+	})
+}
+
 // pollMetadata queries the player for current metadata
 func (m *Model) pollMetadata() tea.Cmd {
 	return func() tea.Msg {
@@ -355,6 +377,12 @@ type tickMsg struct{}
 type metadataUpdateMsg struct {
 	song string
 }
+
+// Sleep timer messages
+type sleepTimerTickMsg struct{}
+type sleepTimerExpiredMsg struct{}
+type sleepTimerSetMsg struct{ duration time.Duration }
+type sleepTimerCancelledMsg struct{}
 
 // Update handles messages and updates the model
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -403,6 +431,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case stopPlaybackMsg:
 		m.stopPlayback()
+		// Cancel sleep timer when user manually stops (not when switching stations)
+		m.sleepTimerActive = false
+		m.sleepTimerRemaining = 0
 		return m, nil
 
 	case stationNameSuggestionsMsg:
@@ -431,6 +462,42 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentSong = msg.song
 		return m, nil
 
+	case sleepTimerSetMsg:
+		m.sleepTimerActive = true
+		m.sleepTimerDuration = msg.duration
+		m.sleepTimerRemaining = msg.duration
+		m.sleepTimerStart = time.Now()
+		return m, m.sleepTimerTick()
+
+	case sleepTimerTickMsg:
+		if !m.sleepTimerActive {
+			return m, nil // Timer was cancelled
+		}
+
+		// Calculate remaining time
+		elapsed := time.Since(m.sleepTimerStart)
+		m.sleepTimerRemaining = m.sleepTimerDuration - elapsed
+
+		if m.sleepTimerRemaining <= 0 {
+			// Timer expired!
+			return m, func() tea.Msg {
+				return sleepTimerExpiredMsg{}
+			}
+		}
+
+		// Continue ticking
+		return m, m.sleepTimerTick()
+
+	case sleepTimerExpiredMsg:
+		m.sleepTimerActive = false
+		m.stopPlayback()
+		return m, nil
+
+	case sleepTimerCancelledMsg:
+		m.sleepTimerActive = false
+		m.sleepTimerRemaining = 0
+		return m, nil
+
 	case errMsg:
 		m.err = msg.err
 		return m, nil
@@ -456,16 +523,24 @@ func (m *Model) View() string {
 		return fmt.Sprintf("Error: %v\n\nPress 'q' to quit", m.err)
 	}
 
+	var baseView string
 	switch m.view {
 	case ViewLoading:
-		return "Loading stations...\n"
+		baseView = "Loading stations...\n"
 
 	case ViewStationList:
-		return m.renderStationList()
+		baseView = m.renderStationList()
 
 	default:
-		return "Unknown view\n"
+		baseView = "Unknown view\n"
 	}
+
+	// Overlay timer modal if open
+	if m.showTimerModal {
+		return m.renderTimerModal()
+	}
+
+	return baseView
 }
 
 // handleMouseClick handles mouse click events to switch sections

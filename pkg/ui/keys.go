@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,6 +12,11 @@ import (
 
 // handleKeyPress handles keyboard input
 func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// If timer modal is open, handle input differently
+	if m.showTimerModal {
+		return m.handleTimerModalInput(msg)
+	}
+
 	// If editing a filter, handle input differently
 	if m.editingFilter != FilterNone {
 		return m.handleFilterInput(msg)
@@ -93,6 +99,19 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		_ = m.player.SetVolume(newVol)
 		return m, nil
+
+	case "t":
+		// Open timer modal
+		m.showTimerModal = true
+		// Pre-fill with current timer duration if active
+		if m.sleepTimerActive {
+			minutes := int(m.sleepTimerRemaining.Minutes())
+			m.timerInput.SetValue(fmt.Sprintf("%d", minutes))
+			m.timerInput.CursorEnd()
+		} else {
+			m.timerInput.SetValue("")
+		}
+		return m, m.timerInput.Focus()
 
 	case "f":
 		// Toggle favorite for selected station
@@ -434,4 +453,65 @@ func (m *Model) hasActiveFilters() bool {
 		m.filters.Language != "" ||
 		m.filters.StationName != "" ||
 		m.filters.FavoritesOnly
+}
+
+// handleTimerModalInput handles keyboard input in the timer modal
+func (m *Model) handleTimerModalInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Check for Enter key first (before textinput consumes it)
+	if msg.Type == tea.KeyEnter {
+		// Start/update timer with entered value
+		value := strings.TrimSpace(m.timerInput.Value())
+		if value == "" {
+			// Empty input, just close modal
+			m.showTimerModal = false
+			m.timerInput.Blur()
+			return m, nil
+		}
+
+		// Parse minutes using strconv.Atoi
+		mins, err := strconv.Atoi(value)
+		if err != nil || mins <= 0 {
+			// Invalid input, just close modal
+			m.showTimerModal = false
+			m.timerInput.Blur()
+			return m, nil
+		}
+
+		// Close modal and start timer
+		m.showTimerModal = false
+		m.timerInput.Blur()
+
+		return m, func() tea.Msg {
+			return sleepTimerSetMsg{duration: time.Duration(mins) * time.Minute}
+		}
+	}
+
+	switch msg.String() {
+	case "ctrl+c":
+		// Allow quitting even during timer modal
+		m.stopPlayback()
+		return m, tea.Quit
+
+	case "esc":
+		// Close modal without changes
+		m.showTimerModal = false
+		m.timerInput.Blur()
+		return m, nil
+
+	case "x":
+		// Cancel active timer
+		if m.sleepTimerActive {
+			m.showTimerModal = false
+			m.timerInput.Blur()
+			return m, func() tea.Msg {
+				return sleepTimerCancelledMsg{}
+			}
+		}
+		return m, nil
+	}
+
+	// Update text input
+	var cmd tea.Cmd
+	m.timerInput, cmd = m.timerInput.Update(msg)
+	return m, cmd
 }

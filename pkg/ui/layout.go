@@ -96,7 +96,7 @@ func (m *Model) renderFooter() string {
 		shortcuts = "↑↓/jk: select • enter: edit • c: clear"
 	}
 
-	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • ctrl+c: quit",
+	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • t: sleep timer • ctrl+c: quit",
 		m.focusedSection.String(),
 		shortcuts,
 	)
@@ -200,6 +200,28 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	info.WriteString("\n ")
 
 	info.WriteString(fmt.Sprintf("Volume: %d%%", vol))
+
+	// Show sleep timer if active
+	if m.sleepTimerActive && m.sleepTimerRemaining > 0 {
+		info.WriteString("\n\n ")
+
+		// Format remaining time as MM:SS or HH:MM:SS
+		minutes := int(m.sleepTimerRemaining.Minutes())
+		seconds := int(m.sleepTimerRemaining.Seconds()) % 60
+
+		timerText := ""
+		if minutes >= 60 {
+			hours := minutes / 60
+			minutes = minutes % 60
+			timerText = fmt.Sprintf("⏱ Sleep timer: %d:%02d:%02d", hours, minutes, seconds)
+		} else {
+			timerText = fmt.Sprintf("⏱ Sleep timer: %d:%02d", minutes, seconds)
+		}
+
+		info.WriteString(lipgloss.NewStyle().
+			Foreground(lipgloss.Color("208")). // Orange color
+			Render(timerText))
+	}
 
 	// Place content
 	panel := lipgloss.JoinVertical(
@@ -324,4 +346,79 @@ func (m *Model) renderFilterList() string {
 	}
 
 	return content.String()
+}
+
+// renderTimerModal renders the sleep timer configuration modal
+func (m *Model) renderTimerModal() string {
+	// Modal dimensions
+	modalWidth := 50
+	modalHeight := 10
+
+	// Title
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("205")).
+		Padding(0, 1).
+		Render("⏱ Sleep Timer")
+
+	var content strings.Builder
+	content.WriteString("\n")
+
+	// Show current timer status
+	if m.sleepTimerActive {
+		minutes := int(m.sleepTimerRemaining.Minutes())
+		seconds := int(m.sleepTimerRemaining.Seconds()) % 60
+		statusText := fmt.Sprintf("Current timer: %d:%02d remaining", minutes, seconds)
+		content.WriteString("  ")
+		content.WriteString(lipgloss.NewStyle().
+			Foreground(lipgloss.Color("86")).
+			Render(statusText))
+		content.WriteString("\n\n")
+	} else {
+		content.WriteString("  ")
+		content.WriteString(lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			Render("No timer active"))
+		content.WriteString("\n\n")
+	}
+
+	// Input field
+	content.WriteString("  Set timer (minutes): ")
+	content.WriteString(m.timerInput.View())
+	content.WriteString("\n\n")
+
+	// Help text
+	helpText := "enter: start timer"
+	if m.sleepTimerActive {
+		helpText += " • x: cancel timer"
+	}
+	helpText += " • esc: close"
+
+	content.WriteString("  ")
+	content.WriteString(lipgloss.NewStyle().
+		Foreground(lipgloss.Color("241")).
+		Render(helpText))
+
+	// Create modal panel
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, content.String())
+
+	// Style the modal with border
+	modal := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("86")).
+		Padding(1, 2).
+		Width(modalWidth).
+		Height(modalHeight).
+		Render(panel)
+
+	// Center the modal
+	centered := lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		modal,
+	)
+
+	return centered
 }
