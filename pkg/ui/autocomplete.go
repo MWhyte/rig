@@ -125,7 +125,7 @@ func (m *AutocompleteModel) View(width, height int) string {
 	// Show suggestions
 	if len(m.filteredSugs) == 0 {
 		// No matches
-		noMatchStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+		noMatchStyle := lipgloss.NewStyle().Foreground(colorMuted)
 		if m.textInput.Value() == "" {
 			content.WriteString(noMatchStyle.Render("  Type to search..."))
 		} else {
@@ -158,11 +158,11 @@ func (m *AutocompleteModel) View(width, height int) string {
 			// Highlight selected item
 			if i == m.selectedIndex {
 				style := lipgloss.NewStyle().
-					Foreground(lipgloss.Color("86")).
+					Foreground(colorAccent).
 					Bold(true)
 				content.WriteString(fmt.Sprintf("  → %s\n", style.Render(suggestion)))
 			} else {
-				style := lipgloss.NewStyle().Foreground(lipgloss.Color("250"))
+				style := lipgloss.NewStyle().Foreground(colorDim)
 				content.WriteString(fmt.Sprintf("    %s\n", style.Render(suggestion)))
 			}
 		}
@@ -170,7 +170,7 @@ func (m *AutocompleteModel) View(width, height int) string {
 		// Show scroll indicator if there are more items
 		if len(m.filteredSugs) > availableLines {
 			scrollInfo := fmt.Sprintf("  (%d/%d)", m.selectedIndex+1, len(m.filteredSugs))
-			scrollStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+			scrollStyle := lipgloss.NewStyle().Foreground(colorMuted)
 			content.WriteString(scrollStyle.Render(scrollInfo))
 			content.WriteString("\n")
 		}
@@ -178,7 +178,7 @@ func (m *AutocompleteModel) View(width, height int) string {
 
 	// Help text (always at bottom)
 	content.WriteString("\n")
-	helpStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	helpStyle := lipgloss.NewStyle().Foreground(colorMuted)
 	content.WriteString(helpStyle.Render("  ↑↓: select • enter: apply • esc: cancel"))
 
 	return content.String()

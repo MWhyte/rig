@@ -11,21 +11,21 @@ var (
 	// Border styles
 	activeBorderStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("86"))
+				BorderForeground(colorAccent)
 
 	inactiveBorderStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("240"))
+				BorderForeground(colorBorder)
 
 	// Panel styles
 	panelTitleStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("205")).
+			Foreground(colorTitle).
 			Padding(0, 1)
 
 	activePanelTitleStyle = lipgloss.NewStyle().
 				Bold(true).
-				Foreground(lipgloss.Color("86")).
+				Foreground(colorAccent).
 				Padding(0, 1)
 )
 
@@ -141,7 +141,7 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 		content.WriteString("\n")
 		content.WriteString(" ")
 		content.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
+			Foreground(colorMuted).
 			Render("No station playing"))
 		content.WriteString("\n\n Select a station and press Enter to play")
 
@@ -155,10 +155,10 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	}
 
 	status := "⏸ Paused"
-	statusColor := lipgloss.Color("208")
+	statusColor := lipgloss.TerminalColor(colorWarning)
 	if m.isPlaying {
 		status = "▶ Playing"
-		statusColor = lipgloss.Color("86")
+		statusColor = colorAccent
 	}
 
 	vol, _ := m.player.GetVolume()
@@ -169,18 +169,18 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	info.WriteString("\n ")
 	info.WriteString(lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("205")).
+		Foreground(colorTitle).
 		Render(m.nowPlaying.Name))
 	info.WriteString("\n ")
 
 	// Current song metadata
 	if m.currentSong != "" {
 		info.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("86")).
+			Foreground(colorAccent).
 			Render(m.currentSong))
 	} else {
 		info.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
+			Foreground(colorMuted).
 			Render("(No song info)"))
 	}
 	info.WriteString("\n\n ")
@@ -219,7 +219,7 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 		}
 
 		info.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("208")). // Orange color
+			Foreground(colorWarning).
 			Render(timerText))
 	}
 
@@ -303,32 +303,32 @@ func (m *Model) renderFilterList() string {
 			// Special handling for favorites
 			if m.filters.FavoritesOnly {
 				valueText = "★ Only"
-				valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+				valueStyle = lipgloss.NewStyle().Foreground(colorAccent)
 			} else {
 				valueText = "All Stations"
-				valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+				valueStyle = lipgloss.NewStyle().Foreground(colorMuted)
 			}
 		} else {
 			// Regular filters
 			if filter.isEmpty {
 				valueText = "All " + filter.label + "s"
-				valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+				valueStyle = lipgloss.NewStyle().Foreground(colorMuted)
 			} else {
 				valueText = filter.value
-				valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+				valueStyle = lipgloss.NewStyle().Foreground(colorAccent)
 			}
 		}
 
 		// Apply selection highlighting
 		if isSelected {
-			valueStyle = valueStyle.Bold(true).Foreground(lipgloss.Color("86"))
+			valueStyle = valueStyle.Bold(true).Foreground(colorAccent)
 		}
 
 		// Format line
-		content.WriteString(fmt.Sprintf("%s%d. %s: %s\n",
+		labelStyle := lipgloss.NewStyle().Foreground(colorLabel)
+		content.WriteString(fmt.Sprintf("%s%s %s\n",
 			prefix,
-			filter.index+1,
-			filter.label,
+			labelStyle.Render(fmt.Sprintf("%d. %s:", filter.index+1, filter.label)),
 			valueStyle.Render(valueText)))
 	}
 
@@ -337,11 +337,11 @@ func (m *Model) renderFilterList() string {
 	// Help text
 	if m.focusedSection == SectionFilters {
 		content.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
+			Foreground(colorMuted).
 			Render("  ↑↓/jk: select • enter: edit • 1-5: direct • c: clear"))
 	} else {
 		content.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
+			Foreground(colorMuted).
 			Render("  Press Tab to focus"))
 	}
 
@@ -357,7 +357,7 @@ func (m *Model) renderTimerModal() string {
 	// Title
 	title := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("205")).
+		Foreground(colorTitle).
 		Padding(0, 1).
 		Render("⏱ Sleep Timer")
 
@@ -371,13 +371,13 @@ func (m *Model) renderTimerModal() string {
 		statusText := fmt.Sprintf("Current timer: %d:%02d remaining", minutes, seconds)
 		content.WriteString("  ")
 		content.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("86")).
+			Foreground(colorAccent).
 			Render(statusText))
 		content.WriteString("\n\n")
 	} else {
 		content.WriteString("  ")
 		content.WriteString(lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
+			Foreground(colorMuted).
 			Render("No timer active"))
 		content.WriteString("\n\n")
 	}
@@ -396,7 +396,7 @@ func (m *Model) renderTimerModal() string {
 
 	content.WriteString("  ")
 	content.WriteString(lipgloss.NewStyle().
-		Foreground(lipgloss.Color("241")).
+		Foreground(colorMuted).
 		Render(helpText))
 
 	// Create modal panel
@@ -405,7 +405,7 @@ func (m *Model) renderTimerModal() string {
 	// Style the modal with border
 	modal := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("86")).
+		BorderForeground(colorAccent).
 		Padding(1, 2).
 		Width(modalWidth).
 		Height(modalHeight).

@@ -13,11 +13,11 @@ import (
 var (
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("205")).
+			Foreground(colorTitle).
 			MarginBottom(1)
 
 	helpStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241"))
+			Foreground(colorMuted)
 )
 
 // StationItem implements list.Item for station list
@@ -70,7 +70,46 @@ func (m *Model) initList() {
 	}
 
 	delegate := list.NewDefaultDelegate()
+	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.
+		Foreground(colorAccent).
+		BorderLeftForeground(colorAccent)
+	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.
+		Foreground(colorMuted).
+		BorderLeftForeground(colorAccent)
+	delegate.Styles.NormalTitle = delegate.Styles.NormalTitle.
+		Foreground(colorTitle)
+	delegate.Styles.NormalDesc = delegate.Styles.NormalDesc.
+		Foreground(colorDim)
 	m.stationList = list.New(items, delegate, 0, 0)
+
+	// Style all built-in list chrome to match our palette
+	m.stationList.Styles.Title = m.stationList.Styles.Title.
+		Foreground(colorTitle).
+		Background(lipgloss.NoColor{})
+	m.stationList.Styles.TitleBar = m.stationList.Styles.TitleBar.
+		Background(lipgloss.NoColor{})
+	m.stationList.Styles.FilterPrompt = m.stationList.Styles.FilterPrompt.
+		Foreground(colorAccent)
+	m.stationList.Styles.FilterCursor = m.stationList.Styles.FilterCursor.
+		Foreground(colorTitle)
+	m.stationList.Styles.DefaultFilterCharacterMatch = m.stationList.Styles.DefaultFilterCharacterMatch.
+		Foreground(colorAccent)
+	m.stationList.Styles.StatusBar = m.stationList.Styles.StatusBar.
+		Foreground(colorMuted)
+	m.stationList.Styles.StatusBarActiveFilter = m.stationList.Styles.StatusBarActiveFilter.
+		Foreground(colorAccent)
+	m.stationList.Styles.StatusBarFilterCount = m.stationList.Styles.StatusBarFilterCount.
+		Foreground(colorMuted)
+	m.stationList.Styles.NoItems = m.stationList.Styles.NoItems.
+		Foreground(colorMuted)
+	m.stationList.Styles.ActivePaginationDot = m.stationList.Styles.ActivePaginationDot.
+		Foreground(colorAccent)
+	m.stationList.Styles.InactivePaginationDot = m.stationList.Styles.InactivePaginationDot.
+		Foreground(colorBorder)
+	m.stationList.Styles.HelpStyle = m.stationList.Styles.HelpStyle.
+		Foreground(colorMuted)
+	m.stationList.Styles.DividerDot = m.stationList.Styles.DividerDot.
+		Foreground(colorBorder)
 
 	// Disable the built-in title - we render our own in the panel
 	m.stationList.Title = ""
