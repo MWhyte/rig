@@ -32,34 +32,26 @@ var (
 // renderMultiPanelLayout renders the main multi-panel layout
 func (m *Model) renderMultiPanelLayout() string {
 	// Calculate dimensions
-	// Top section: 30% of height for Filters + Now Playing
-	// Bottom section: 70% of height for Station List
-	topSectionHeight := int(float64(m.height) * 0.30)
-	bottomSectionHeight := m.height - topSectionHeight - 8
+	// Left column (70% width): Filters + Station List
+	// Right column (30% width): Now Playing + Sponsors
+	leftWidth := int(float64(m.width) * 0.70)
+	rightWidth := m.width - leftWidth
 
-	// Top section split 50/50
-	halfWidth := m.width / 2
+	topHeight := int(float64(m.height) * 0.30)
+	bottomHeight := m.height - topHeight - 8
 
-	// Build top panels (side by side)
-	filtersPanel := m.renderFiltersPanel(halfWidth-3, topSectionHeight-2)
-	nowPlayingPanel := m.renderNowPlayingPanel(halfWidth-3, topSectionHeight-2)
+	// Build left column: Filters on top, Station List below
+	filtersPanel := m.renderFiltersPanel(leftWidth-3, topHeight-2)
+	stationListPanel := m.renderStationListPanel(leftWidth-3, bottomHeight)
+	leftColumn := lipgloss.JoinVertical(lipgloss.Left, filtersPanel, stationListPanel)
 
-	// Combine top panels horizontally
-	topRow := lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		filtersPanel,
-		nowPlayingPanel,
-	)
+	// Build right column: Now Playing on top, Sponsors below
+	nowPlayingPanel := m.renderNowPlayingPanel(rightWidth-3, topHeight-2)
+	sponsorsPanel := m.renderSponsorsPanel(rightWidth-3, bottomHeight)
+	rightColumn := lipgloss.JoinVertical(lipgloss.Left, nowPlayingPanel, sponsorsPanel)
 
-	// Build bottom panel (full width)
-	stationListPanel := m.renderStationListPanel(m.width-4, bottomSectionHeight)
-
-	// Combine top and bottom
-	mainContent := lipgloss.JoinVertical(
-		lipgloss.Left,
-		topRow,
-		stationListPanel,
-	)
+	// Combine columns horizontally
+	mainContent := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, rightColumn)
 
 	// Add header and footer
 	header := m.renderHeader()
@@ -166,18 +158,33 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	// Build station info
 	var info strings.Builder
 
+	// Truncate text to fit panel width (account for border + padding)
+	maxLen := width - 4
+	if maxLen < 10 {
+		maxLen = 10
+	}
+
+	stationName := m.nowPlaying.Name
+	if len(stationName) > maxLen {
+		stationName = stationName[:maxLen-3] + "..."
+	}
+
 	info.WriteString("\n ")
 	info.WriteString(lipgloss.NewStyle().
 		Bold(true).
 		Foreground(colorTitle).
-		Render(m.nowPlaying.Name))
+		Render(stationName))
 	info.WriteString("\n ")
 
 	// Current song metadata
 	if m.currentSong != "" {
+		songText := m.currentSong
+		if len(songText) > maxLen {
+			songText = songText[:maxLen-3] + "..."
+		}
 		info.WriteString(lipgloss.NewStyle().
 			Foreground(colorAccent).
-			Render(m.currentSong))
+			Render(songText))
 	} else {
 		info.WriteString(lipgloss.NewStyle().
 			Foreground(colorMuted).
@@ -421,4 +428,59 @@ func (m *Model) renderTimerModal() string {
 	)
 
 	return centered
+}
+
+// renderSponsorsPanel renders the sponsors/ads panel with wipe animation
+func (m *Model) renderSponsorsPanel(width, height int) string {
+	title := panelTitleStyle.Render("Sponsors")
+
+	if len(m.sponsorAds) == 0 {
+		placeholder := lipgloss.NewStyle().
+			Foreground(colorMuted).
+			Render("\n  Your ad here")
+		panel := lipgloss.JoinVertical(lipgloss.Left, title, placeholder)
+		return inactiveBorderStyle.
+			Width(width).
+			Height(height).
+			Render(panel)
+	}
+
+	currentLines := strings.Split(m.sponsorAds[m.sponsorIndex], "\n")
+
+	var displayLines []string
+
+	switch m.sponsorWipePhase {
+	case wipeOut:
+		prevLines := strings.Split(m.sponsorAds[m.sponsorPrevIndex], "\n")
+		for i, line := range prevLines {
+			if i < m.sponsorFrame {
+				displayLines = append(displayLines, "")
+			} else {
+				displayLines = append(displayLines, line)
+			}
+		}
+	case wipePause:
+		// Show blank
+		displayLines = []string{""}
+	case wipeIn:
+		for i, line := range currentLines {
+			if i < m.sponsorFrame {
+				displayLines = append(displayLines, line)
+			} else {
+				displayLines = append(displayLines, "")
+			}
+		}
+	default:
+		displayLines = currentLines
+	}
+
+	content := strings.Join(displayLines, "\n")
+
+	adStyle := lipgloss.NewStyle().Foreground(colorDim)
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, adStyle.Render(content))
+
+	return inactiveBorderStyle.
+		Width(width).
+		Height(height).
+		Render(panel)
 }

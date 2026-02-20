@@ -24,7 +24,8 @@
       "Bash(gofmt:*)",
       "Bash(grep:*)",
       "WebFetch(domain:colorhunt.co)",
-      "Bash(go doc:*)"
+      "Bash(go doc:*)",
+      "WebFetch(domain:www.mwhyte.dev)"
     ]
   }
 }

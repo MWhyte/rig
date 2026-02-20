@@ -94,6 +94,14 @@ type Model struct {
 	sleepTimerStart     time.Time     // When timer started
 	showTimerModal      bool          // Show timer configuration modal
 	timerInput          textinput.Model
+
+	// Sponsors
+	sponsorAds       []string  // Loaded ad content
+	sponsorIndex     int       // Current ad index
+	sponsorPrevIndex int       // Previous ad index (for wipe transition)
+	sponsorFrame     int       // Current animation frame within phase
+	sponsorWipePhase wipePhase // Current phase of the wipe animation
+
 }
 
 // NewModel creates a new application model
@@ -142,6 +150,7 @@ func NewModel() (*Model, error) {
 		stationNameCache:    make(map[string][]string),
 		favManager:          favManager,
 		timerInput:          timerInput,
+		sponsorAds:          loadAds(),
 	}
 
 	return m, nil
@@ -149,11 +158,15 @@ func NewModel() (*Model, error) {
 
 // Init initializes the model
 func (m *Model) Init() tea.Cmd {
-	return tea.Batch(
+	cmds := []tea.Cmd{
 		m.fetchPopularStations(),
 		m.fetchMetadata(),
 		m.tick(),
-	)
+	}
+	if len(m.sponsorAds) > 1 {
+		cmds = append(cmds, m.sponsorRotateTick())
+	}
+	return tea.Batch(cmds...)
 }
 
 // fetchPopularStations fetches popular stations from the API
@@ -345,6 +358,27 @@ func (m *Model) sleepTimerTick() tea.Cmd {
 	})
 }
 
+// sponsorRotateTick returns a command that triggers ad rotation
+func (m *Model) sponsorRotateTick() tea.Cmd {
+	return tea.Tick(60*time.Second, func(time.Time) tea.Msg {
+		return sponsorRotateMsg{}
+	})
+}
+
+// sponsorWipeTick returns a command that advances the wipe animation
+func (m *Model) sponsorWipeTick() tea.Cmd {
+	return tea.Tick(120*time.Millisecond, func(time.Time) tea.Msg {
+		return sponsorWipeMsg{}
+	})
+}
+
+// sponsorPauseTick returns a command for the blank pause between wipes
+func (m *Model) sponsorPauseTick() tea.Cmd {
+	return tea.Tick(1*time.Second, func(time.Time) tea.Msg {
+		return sponsorWipeMsg{}
+	})
+}
+
 // pollMetadata queries the player for current metadata
 func (m *Model) pollMetadata() tea.Cmd {
 	return func() tea.Msg {
@@ -383,6 +417,20 @@ type sleepTimerTickMsg struct{}
 type sleepTimerExpiredMsg struct{}
 type sleepTimerSetMsg struct{ duration time.Duration }
 type sleepTimerCancelledMsg struct{}
+
+// Wipe animation phases
+type wipePhase int
+
+const (
+	wipeIdle  wipePhase = iota // No animation
+	wipeOut                    // Clearing old ad top-to-bottom
+	wipePause                  // Blank pause between ads
+	wipeIn                     // Revealing new ad top-to-bottom
+)
+
+// Sponsor messages
+type sponsorRotateMsg struct{}
+type sponsorWipeMsg struct{}
 
 // Update handles messages and updates the model
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -496,6 +544,42 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case sleepTimerCancelledMsg:
 		m.sleepTimerActive = false
 		m.sleepTimerRemaining = 0
+		return m, nil
+
+	case sponsorRotateMsg:
+		if len(m.sponsorAds) > 1 {
+			m.sponsorPrevIndex = m.sponsorIndex
+			m.sponsorFrame = 0
+			m.sponsorWipePhase = wipeOut
+			return m, m.sponsorWipeTick()
+		}
+		return m, m.sponsorRotateTick()
+
+	case sponsorWipeMsg:
+		switch m.sponsorWipePhase {
+		case wipeOut:
+			m.sponsorFrame++
+			adLineCount := len(strings.Split(m.sponsorAds[m.sponsorPrevIndex], "\n"))
+			if m.sponsorFrame >= adLineCount {
+				m.sponsorWipePhase = wipePause
+				m.sponsorFrame = 0
+				return m, m.sponsorPauseTick()
+			}
+			return m, m.sponsorWipeTick()
+		case wipePause:
+			m.sponsorIndex = (m.sponsorIndex + 1) % len(m.sponsorAds)
+			m.sponsorWipePhase = wipeIn
+			m.sponsorFrame = 0
+			return m, m.sponsorWipeTick()
+		case wipeIn:
+			m.sponsorFrame++
+			adLineCount := len(strings.Split(m.sponsorAds[m.sponsorIndex], "\n"))
+			if m.sponsorFrame >= adLineCount {
+				m.sponsorWipePhase = wipeIdle
+				return m, m.sponsorRotateTick()
+			}
+			return m, m.sponsorWipeTick()
+		}
 		return m, nil
 
 	case errMsg:
