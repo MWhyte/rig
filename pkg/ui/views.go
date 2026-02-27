@@ -3,10 +3,10 @@ package ui
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/list"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
 )
 
@@ -88,10 +88,9 @@ func (m *Model) initList() {
 		Background(lipgloss.NoColor{})
 	m.stationList.Styles.TitleBar = m.stationList.Styles.TitleBar.
 		Background(lipgloss.NoColor{})
-	m.stationList.Styles.FilterPrompt = m.stationList.Styles.FilterPrompt.
+	m.stationList.Styles.Filter.Focused.Prompt = m.stationList.Styles.Filter.Focused.Prompt.
 		Foreground(colorAccent)
-	m.stationList.Styles.FilterCursor = m.stationList.Styles.FilterCursor.
-		Foreground(colorTitle)
+	m.stationList.Styles.Filter.Cursor.Color = colorTitle
 	m.stationList.Styles.DefaultFilterCharacterMatch = m.stationList.Styles.DefaultFilterCharacterMatch.
 		Foreground(colorAccent)
 	m.stationList.Styles.StatusBar = m.stationList.Styles.StatusBar.

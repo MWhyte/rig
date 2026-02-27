@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/list"
+	tea "charm.land/bubbletea/v2"
 )
 
 // handleKeyPress handles keyboard input
-func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// If timer modal is open, handle input differently
 	if m.showTimerModal {
 		return m.handleTimerModalInput(msg)
@@ -23,7 +23,7 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	// If station list is filtering, pass keys to it first (except ctrl+c)
-	if m.focusedSection == SectionStationList && m.stationList.FilterState() == list.Filtering {
+	if m.ready && m.focusedSection == SectionStationList && m.stationList.FilterState() == list.Filtering {
 		if msg.String() != "ctrl+c" {
 			var cmd tea.Cmd
 			m.stationList, cmd = m.stationList.Update(msg)
@@ -47,7 +47,7 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.focusedSection = m.focusedSection.prev()
 		return m, nil
 
-	case " ":
+	case "space":
 		// Toggle play/pause, or play selected station
 		if m.isPlaying && m.nowPlaying != nil {
 			// Currently playing - pause it
@@ -149,7 +149,7 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleStationListKeys handles keys when station list is focused
-func (m *Model) handleStationListKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *Model) handleStationListKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "enter":
 		// Play selected station
@@ -172,7 +172,7 @@ func (m *Model) handleStationListKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleFiltersKeys handles keys when filters section is focused
-func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *Model) handleFiltersKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "up", "k":
 		// Navigate up through filters
@@ -311,7 +311,7 @@ func (m *Model) handleFiltersKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleFilterInput handles keyboard input when editing a filter
-func (m *Model) handleFilterInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *Model) handleFilterInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c":
 		// Allow quitting even during input
@@ -456,9 +456,9 @@ func (m *Model) hasActiveFilters() bool {
 }
 
 // handleTimerModalInput handles keyboard input in the timer modal
-func (m *Model) handleTimerModalInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *Model) handleTimerModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// Check for Enter key first (before textinput consumes it)
-	if msg.Type == tea.KeyEnter {
+	if msg.Code == tea.KeyEnter {
 		// Start/update timer with entered value
 		value := strings.TrimSpace(m.timerInput.Value())
 		if value == "" {

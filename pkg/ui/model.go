@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mrwhyte/rig/pkg/favorites"
 	"github.com/mrwhyte/rig/pkg/player"
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
@@ -127,7 +127,7 @@ func NewModel() (*Model, error) {
 	timerInput := textinput.New()
 	timerInput.Placeholder = "Enter minutes (e.g., 30)"
 	timerInput.CharLimit = 4
-	timerInput.Width = 30
+	timerInput.SetWidth(30)
 
 	// Create favorites manager
 	favManager, err := favorites.NewManager()
@@ -448,14 +448,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return m, nil
 
-	case tea.MouseMsg:
+	case tea.MouseClickMsg:
 		// Handle mouse clicks to switch sections
-		if msg.Type == tea.MouseLeft {
+		if msg.Button == tea.MouseLeft {
 			return m.handleMouseClick(msg)
 		}
 		return m, nil
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		return m.handleKeyPress(msg)
 
 	case stationsLoadedMsg:
@@ -587,8 +587,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	// Update the list only if station list is focused
-	if m.focusedSection == SectionStationList {
+	// Update the list only if station list is focused and the list is initialized
+	if m.ready && m.focusedSection == SectionStationList {
 		var cmd tea.Cmd
 		m.stationList, cmd = m.stationList.Update(msg)
 		return m, cmd
@@ -598,41 +598,41 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // View renders the UI
-func (m *Model) View() string {
+func (m *Model) View() tea.View {
+	var content string
+
 	if !m.ready {
-		return "Initializing rig.fm...\n"
+		content = "Initializing rig.fm...\n"
+	} else if m.err != nil {
+		content = fmt.Sprintf("Error: %v\n\nPress 'q' to quit", m.err)
+	} else if m.showTimerModal {
+		content = m.renderTimerModal()
+	} else {
+		switch m.view {
+		case ViewLoading:
+			content = "Loading stations...\n"
+		case ViewStationList:
+			content = m.renderStationList()
+		default:
+			content = "Unknown view\n"
+		}
 	}
 
-	if m.err != nil {
-		return fmt.Sprintf("Error: %v\n\nPress 'q' to quit", m.err)
-	}
-
-	var baseView string
-	switch m.view {
-	case ViewLoading:
-		baseView = "Loading stations...\n"
-
-	case ViewStationList:
-		baseView = m.renderStationList()
-
-	default:
-		baseView = "Unknown view\n"
-	}
-
-	// Overlay timer modal if open
-	if m.showTimerModal {
-		return m.renderTimerModal()
-	}
-
-	return baseView
+	var v tea.View
+	v.SetContent(content)
+	v.AltScreen = true
+	v.MouseMode = tea.MouseModeCellMotion
+	return v
 }
 
 // handleMouseClick handles mouse click events to switch sections
-func (m *Model) handleMouseClick(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
+func (m *Model) handleMouseClick(msg tea.MouseClickMsg) (tea.Model, tea.Cmd) {
 	// Don't process clicks if not ready or not in station list view
 	if !m.ready || m.view != ViewStationList {
 		return m, nil
 	}
+
+	mouse := msg.Mouse()
 
 	// Calculate layout boundaries (matching renderMultiPanelLayout)
 	topSectionHeight := int(float64(m.height) * 0.30)
@@ -641,10 +641,10 @@ func (m *Model) handleMouseClick(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	headerHeight := 2
 
 	// Check if click is in top section (Filters area)
-	if msg.Y >= headerHeight && msg.Y < headerHeight+topSectionHeight {
+	if mouse.Y >= headerHeight && mouse.Y < headerHeight+topSectionHeight {
 		// Top section - check if left half (Filters) or right half (Now Playing)
 		halfWidth := m.width / 2
-		if msg.X < halfWidth {
+		if mouse.X < halfWidth {
 			// Clicked on Filters section
 			m.focusedSection = SectionFilters
 		}
@@ -653,7 +653,7 @@ func (m *Model) handleMouseClick(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	}
 
 	// Check if click is in bottom section (Station List)
-	if msg.Y >= headerHeight+topSectionHeight {
+	if mouse.Y >= headerHeight+topSectionHeight {
 		// Clicked on Station List section
 		m.focusedSection = SectionStationList
 		return m, nil

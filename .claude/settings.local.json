@@ -25,7 +25,10 @@
       "Bash(grep:*)",
       "WebFetch(domain:colorhunt.co)",
       "Bash(go doc:*)",
-      "WebFetch(domain:www.mwhyte.dev)"
+      "WebFetch(domain:www.mwhyte.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(./rig:*)"
     ]
   }
 }

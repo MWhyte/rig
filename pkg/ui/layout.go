@@ -2,9 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 )
 
 var (
@@ -147,7 +148,7 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	}
 
 	status := "⏸ Paused"
-	statusColor := lipgloss.TerminalColor(colorWarning)
+	var statusColor color.Color = colorWarning
 	if m.isPlaying {
 		status = "▶ Playing"
 		statusColor = colorAccent

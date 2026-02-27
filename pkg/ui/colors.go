@@ -1,33 +1,36 @@
 package ui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"charm.land/lipgloss/v2"
+	"charm.land/lipgloss/v2/compat"
+)
 
 // Neon synthwave color palette — inspired by ColorHunt neon palettes.
 // Uses hex colors for precise, vibrant neon tones.
 var (
 	// Primary accent: active borders, selected items, playing status
 	// Bright neon purple — the synthwave signature
-	colorAccent = lipgloss.AdaptiveColor{Light: "#7700FF", Dark: "#B44AFF"}
+	colorAccent = compat.AdaptiveColor{Light: lipgloss.Color("#7700FF"), Dark: lipgloss.Color("#B44AFF")}
 
 	// Secondary accent: app title, panel titles, station name
 	// Hot neon pink
-	colorTitle = lipgloss.AdaptiveColor{Light: "#FF0080", Dark: "#FF3399"}
+	colorTitle = compat.AdaptiveColor{Light: lipgloss.Color("#FF0080"), Dark: lipgloss.Color("#FF3399")}
 
 	// Muted text: help text, placeholders, inactive labels
 	// Plain gray — stays out of the way
-	colorMuted = lipgloss.AdaptiveColor{Light: "#666666", Dark: "#999999"}
+	colorMuted = compat.AdaptiveColor{Light: lipgloss.Color("#666666"), Dark: lipgloss.Color("#999999")}
 
 	// Inactive borders
 	// Quiet, just structure
-	colorBorder = lipgloss.AdaptiveColor{Light: "#BBBBBB", Dark: "#555555"}
+	colorBorder = compat.AdaptiveColor{Light: lipgloss.Color("#BBBBBB"), Dark: lipgloss.Color("#555555")}
 
 	// Unselected list items (autocomplete suggestions)
-	colorDim = lipgloss.AdaptiveColor{Light: "#555555", Dark: "#BBBBBB"}
+	colorDim = compat.AdaptiveColor{Light: lipgloss.Color("#555555"), Dark: lipgloss.Color("#BBBBBB")}
 
 	// Warning/status: paused indicator, sleep timer
 	// Neon orange — pops against purple and pink
-	colorWarning = lipgloss.AdaptiveColor{Light: "#EE4400", Dark: "#FF6622"}
+	colorWarning = compat.AdaptiveColor{Light: lipgloss.Color("#EE4400"), Dark: lipgloss.Color("#FF6622")}
 
 	// Labels: filter names, field labels — readable body text
-	colorLabel = lipgloss.AdaptiveColor{Light: "#222222", Dark: "#DDDDDD"}
+	colorLabel = compat.AdaptiveColor{Light: lipgloss.Color("#222222"), Dark: lipgloss.Color("#DDDDDD")}
 )
