@@ -5,32 +5,26 @@ import (
 	"charm.land/lipgloss/v2/compat"
 )
 
-// Neon synthwave color palette — inspired by ColorHunt neon palettes.
-// Uses hex colors for precise, vibrant neon tones.
+// Clean minimal palette — one blue accent, otherwise white and grays.
 var (
 	// Primary accent: active borders, selected items, playing status
-	// Bright neon purple — the synthwave signature
-	colorAccent = compat.AdaptiveColor{Light: lipgloss.Color("#7700FF"), Dark: lipgloss.Color("#B44AFF")}
+	colorAccent = compat.AdaptiveColor{Light: lipgloss.Color("#2E6EB0"), Dark: lipgloss.Color("#5E9EDB")}
 
-	// Secondary accent: app title, panel titles, station name
-	// Hot neon pink
-	colorTitle = compat.AdaptiveColor{Light: lipgloss.Color("#FF0080"), Dark: lipgloss.Color("#FF3399")}
+	// Titles: app title, panel titles, station name
+	colorTitle = compat.AdaptiveColor{Light: lipgloss.Color("#1A1A1A"), Dark: lipgloss.Color("#E8E8E8")}
 
 	// Muted text: help text, placeholders, inactive labels
-	// Plain gray — stays out of the way
-	colorMuted = compat.AdaptiveColor{Light: lipgloss.Color("#666666"), Dark: lipgloss.Color("#999999")}
+	colorMuted = compat.AdaptiveColor{Light: lipgloss.Color("#767676"), Dark: lipgloss.Color("#909090")}
 
 	// Inactive borders
-	// Quiet, just structure
-	colorBorder = compat.AdaptiveColor{Light: lipgloss.Color("#BBBBBB"), Dark: lipgloss.Color("#555555")}
+	colorBorder = compat.AdaptiveColor{Light: lipgloss.Color("#AAAAAA"), Dark: lipgloss.Color("#444444")}
 
-	// Unselected list items (autocomplete suggestions)
-	colorDim = compat.AdaptiveColor{Light: lipgloss.Color("#555555"), Dark: lipgloss.Color("#BBBBBB")}
+	// Dim text: unselected list items, autocomplete suggestions
+	colorDim = compat.AdaptiveColor{Light: lipgloss.Color("#999999"), Dark: lipgloss.Color("#666666")}
 
 	// Warning/status: paused indicator, sleep timer
-	// Neon orange — pops against purple and pink
-	colorWarning = compat.AdaptiveColor{Light: lipgloss.Color("#EE4400"), Dark: lipgloss.Color("#FF6622")}
+	colorWarning = compat.AdaptiveColor{Light: lipgloss.Color("#C07020"), Dark: lipgloss.Color("#E8A838")}
 
-	// Labels: filter names, field labels — readable body text
-	colorLabel = compat.AdaptiveColor{Light: lipgloss.Color("#222222"), Dark: lipgloss.Color("#DDDDDD")}
+	// Labels: filter names, field labels
+	colorLabel = compat.AdaptiveColor{Light: lipgloss.Color("#333333"), Dark: lipgloss.Color("#C8C8C8")}
 )
