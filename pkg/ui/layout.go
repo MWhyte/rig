@@ -38,7 +38,9 @@ func (m *Model) renderMultiPanelLayout() string {
 	leftWidth := int(float64(m.width) * 0.70)
 	rightWidth := m.width - leftWidth
 
-	topHeight := int(float64(m.height) * 0.30)
+	// topHeight must be at least 11: border(2) + title(1) + blank(1) + 5 filters(5) + blank(1) + help(1)
+	// to prevent the filters panel from overflowing and misaligning the station list.
+	topHeight := max(11, int(float64(m.height)*0.30))
 	bottomHeight := m.height - topHeight - 8
 
 	// Build left column: Filters on top, Station List below
@@ -46,10 +48,10 @@ func (m *Model) renderMultiPanelLayout() string {
 	stationListPanel := m.renderStationListPanel(leftWidth-3, bottomHeight)
 	leftColumn := lipgloss.JoinVertical(lipgloss.Left, filtersPanel, stationListPanel)
 
-	// Build right column: Now Playing on top, Sponsors below
-	nowPlayingPanel := m.renderNowPlayingPanel(rightWidth-3, topHeight-2)
-	sponsorsPanel := m.renderSponsorsPanel(rightWidth-3, bottomHeight)
-	rightColumn := lipgloss.JoinVertical(lipgloss.Left, nowPlayingPanel, sponsorsPanel)
+	// Build right column: Sponsors on top, Now Playing below
+	sponsorsPanel := m.renderSponsorsPanel(rightWidth-3, topHeight-2)
+	nowPlayingPanel := m.renderNowPlayingPanel(rightWidth-3, bottomHeight)
+	rightColumn := lipgloss.JoinVertical(lipgloss.Left, sponsorsPanel, nowPlayingPanel)
 
 	// Combine columns horizontally
 	mainContent := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, rightColumn)
@@ -473,6 +475,15 @@ func (m *Model) renderSponsorsPanel(width, height int) string {
 		}
 	default:
 		displayLines = currentLines
+	}
+
+	// Clamp to available inner height: border(2) + title(1) = 3 reserved rows
+	maxLines := height - 3
+	if maxLines < 1 {
+		maxLines = 1
+	}
+	if len(displayLines) > maxLines {
+		displayLines = displayLines[:maxLines]
 	}
 
 	content := strings.Join(displayLines, "\n")

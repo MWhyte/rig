@@ -1,15 +1,5 @@
+  ♪ rig.fm
 
- ╔═══════════════════════════╗
- ║                           ║
- ║      ♪ rig.fm ♪           ║
- ║                           ║
- ║   Terminal Radio          ║
- ║   Done Right.             ║
- ║                           ║
- ║   Free & Open Source      ║
- ║   MIT Licensed            ║
- ║                           ║
- ║   ★ Star us on GitHub ★   ║
- ║   github.com/mrwhyte/rig  ║
- ║                           ║
- ╚═══════════════════════════╝
+  Terminal Radio
+  Free & Open Source
+  github.com/mrwhyte/rig

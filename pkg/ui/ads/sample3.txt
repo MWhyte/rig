@@ -1,16 +1,5 @@
+  YOUR AD HERE
 
- ╭───────────────────────────╮
- │                           │
- │    YOUR AD HERE           │
- │                           │
- │  ┌─────────────────────┐  │
- │  │  Sponsor rig.fm     │  │
- │  │  and reach terminal │  │
- │  │  enthusiasts!       │  │
- │  └─────────────────────┘  │
- │                           │
- │   Affordable rates        │
- │   ASCII art welcome       │
- │   hello@rig.fm            │
- │                           │
- ╰───────────────────────────╯
+  Sponsor rig.fm
+  Reach terminal devs
+  hello@rig.fm
