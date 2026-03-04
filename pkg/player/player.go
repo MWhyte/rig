@@ -31,7 +31,10 @@ type MPVResponse struct {
 
 // Metadata represents stream metadata
 type Metadata struct {
-	Title string // Current song
+	Title      string  // Current song (ICY title)
+	Genre      string  // ICY genre
+	BufferSecs float64 // Seconds of buffered audio ahead of playback position
+	ActualKbps float64 // Actual decoded audio bitrate in kbps
 }
 
 // Player interface defines the audio player operations
@@ -349,6 +352,24 @@ func (p *MPVPlayer) GetMetadata() (*Metadata, error) {
 	if title, err := p.getProperty("metadata/icy-title"); err == nil {
 		if titleStr, ok := title.(string); ok {
 			metadata.Title = titleStr
+		}
+	}
+
+	if genre, err := p.getProperty("metadata/icy-genre"); err == nil {
+		if genreStr, ok := genre.(string); ok {
+			metadata.Genre = genreStr
+		}
+	}
+
+	if cacheTime, err := p.getProperty("demuxer-cache-time"); err == nil {
+		if secs, ok := cacheTime.(float64); ok {
+			metadata.BufferSecs = secs
+		}
+	}
+
+	if bitrate, err := p.getProperty("audio-bitrate"); err == nil {
+		if bps, ok := bitrate.(float64); ok {
+			metadata.ActualKbps = bps / 1000
 		}
 	}
 

@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"image/color"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -124,126 +123,129 @@ func (m *Model) renderStationListPanel(width, height int) string {
 		Render(panel)
 }
 
+// waveFrames is a looping ASCII waveform animation (8 chars wide)
+var waveFrames = []string{
+	"▁▂▃▂▁▁▂▃",
+	"▂▃▂▁▁▂▃▂",
+	"▃▂▁▁▂▃▂▁",
+	"▂▁▁▂▃▂▁▂",
+	"▁▁▂▃▂▁▂▃",
+	"▁▂▃▂▁▂▃▂",
+	"▂▃▂▁▂▃▂▁",
+	"▃▂▁▂▃▂▁▁",
+}
+
+// truncate cuts s to maxLen, appending "..." if needed
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	if maxLen < 4 {
+		return s[:maxLen]
+	}
+	return s[:maxLen-3] + "..."
+}
+
 // renderNowPlayingPanel renders the now playing panel
 func (m *Model) renderNowPlayingPanel(width, height int) string {
 	borderStyle := inactiveBorderStyle
 	titleStyle := panelTitleStyle
-
 	title := titleStyle.Render("Now Playing")
 
-	if m.nowPlaying == nil {
-		var content strings.Builder
-		content.WriteString("\n")
-		content.WriteString(" ")
-		content.WriteString(lipgloss.NewStyle().
-			Foreground(colorMuted).
-			Render("No station playing"))
-		content.WriteString("\n\n Select a station and press Enter to play")
-
-		// No color bar when nothing is playing
-		panel := lipgloss.JoinVertical(lipgloss.Left, title, content.String())
-
-		return borderStyle.
-			Width(width).
-			Height(height).
-			Render(panel)
-	}
-
-	status := "⏸ Paused"
-	var statusColor color.Color = colorWarning
-	if m.isPlaying {
-		status = "▶ Playing"
-		statusColor = colorAccent
-	}
-
-	vol, _ := m.player.GetVolume()
-
-	// Build station info
-	var info strings.Builder
-
-	// Truncate text to fit panel width (account for border + padding)
 	maxLen := width - 4
 	if maxLen < 10 {
 		maxLen = 10
 	}
 
-	stationName := m.nowPlaying.Name
-	if len(stationName) > maxLen {
-		stationName = stationName[:maxLen-3] + "..."
+	if m.nowPlaying == nil {
+		content := "\n " +
+			lipgloss.NewStyle().Foreground(colorMuted).Render("No station playing") +
+			"\n\n " +
+			lipgloss.NewStyle().Foreground(colorDim).Render("Select a station and press Enter")
+
+		panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
+		return borderStyle.Width(width).Height(height).Render(panel)
 	}
 
+	var info strings.Builder
+
+	// Station name
 	info.WriteString("\n ")
-	info.WriteString(lipgloss.NewStyle().
-		Bold(true).
-		Foreground(colorTitle).
-		Render(stationName))
+	info.WriteString(lipgloss.NewStyle().Bold(true).Foreground(colorTitle).
+		Render(truncate(m.nowPlaying.Name, maxLen)))
 	info.WriteString("\n ")
 
-	// Current song metadata
+	// Current song
 	if m.currentSong != "" {
-		songText := m.currentSong
-		if len(songText) > maxLen {
-			songText = songText[:maxLen-3] + "..."
-		}
-		info.WriteString(lipgloss.NewStyle().
-			Foreground(colorAccent).
-			Render(songText))
+		info.WriteString(lipgloss.NewStyle().Foreground(colorAccent).
+			Render(truncate(m.currentSong, maxLen)))
 	} else {
-		info.WriteString(lipgloss.NewStyle().
-			Foreground(colorMuted).
-			Render("(No song info)"))
+		info.WriteString(lipgloss.NewStyle().Foreground(colorMuted).
+			Render("No song info"))
 	}
 	info.WriteString("\n\n ")
 
-	info.WriteString(fmt.Sprintf("%s • %s",
-		m.nowPlaying.Country,
-		m.nowPlaying.Codec))
-	info.WriteString("\n ")
-
-	info.WriteString(fmt.Sprintf("Bitrate: %d kbps",
-		m.nowPlaying.Bitrate))
+	// Country · Genre
+	location := m.nowPlaying.Country
+	if m.currentGenre != "" {
+		location += " · " + m.currentGenre
+	}
+	info.WriteString(lipgloss.NewStyle().Foreground(colorMuted).
+		Render(truncate(location, maxLen)))
 	info.WriteString("\n\n ")
 
-	info.WriteString(lipgloss.NewStyle().
-		Foreground(statusColor).
-		Render(status))
-	info.WriteString("\n ")
-
-	info.WriteString(fmt.Sprintf("Volume: %d%%", vol))
-
-	// Show sleep timer if active
+	// Playback status + wave animation (with optional sleep timer to the right)
+	if m.isPlaying {
+		wave := waveFrames[m.waveFrame%len(waveFrames)]
+		info.WriteString(lipgloss.NewStyle().Foreground(colorAccent).Render("▶") +
+			"  " +
+			lipgloss.NewStyle().Foreground(colorMuted).Render(wave))
+	} else {
+		info.WriteString(lipgloss.NewStyle().Foreground(colorWarning).
+			Render("⏸  Paused"))
+	}
 	if m.sleepTimerActive && m.sleepTimerRemaining > 0 {
-		info.WriteString("\n\n ")
-
-		// Format remaining time as MM:SS or HH:MM:SS
 		minutes := int(m.sleepTimerRemaining.Minutes())
 		seconds := int(m.sleepTimerRemaining.Seconds()) % 60
-
-		timerText := ""
+		timerText := fmt.Sprintf("  ⏱ %d:%02d", minutes, seconds)
 		if minutes >= 60 {
 			hours := minutes / 60
 			minutes = minutes % 60
-			timerText = fmt.Sprintf("⏱ Sleep timer: %d:%02d:%02d", hours, minutes, seconds)
-		} else {
-			timerText = fmt.Sprintf("⏱ Sleep timer: %d:%02d", minutes, seconds)
+			timerText = fmt.Sprintf("  ⏱ %d:%02d:%02d", hours, minutes, seconds)
 		}
-
-		info.WriteString(lipgloss.NewStyle().
-			Foreground(colorWarning).
-			Render(timerText))
+		info.WriteString(lipgloss.NewStyle().Foreground(colorAccent).Render(timerText))
 	}
+	info.WriteString("\n\n ")
 
-	// Place content
-	panel := lipgloss.JoinVertical(
-		lipgloss.Left,
-		title,
-		info.String(),
-	)
+	// Animated volume bar
+	vol, _ := m.player.GetVolume()
+	label := lipgloss.NewStyle().Foreground(colorDim).Render("vol ")
+	pct := lipgloss.NewStyle().Foreground(colorMuted).Render(fmt.Sprintf(" %d%%", vol))
+	barWidth := maxLen - 4 - 5 // "vol " (4) + " 75%" (4-5)
+	if barWidth < 4 {
+		barWidth = 4
+	}
+	m.volumeBar.SetWidth(barWidth)
+	info.WriteString(label + m.volumeBar.View() + pct)
+	info.WriteString("\n ")
 
-	return borderStyle.
-		Width(width).
-		Height(height).
-		Render(panel)
+	// Separator
+	info.WriteString(lipgloss.NewStyle().Foreground(colorBorder).
+		Render(strings.Repeat("─", maxLen)))
+	info.WriteString("\n ")
+
+	// Tech info — muted, minimal
+	techInfo := m.nowPlaying.Codec
+	if m.nowPlaying.Bitrate > 0 {
+		techInfo += fmt.Sprintf(" · %d kbps", m.nowPlaying.Bitrate)
+	}
+	if m.actualKbps > 0 && int(m.actualKbps) != m.nowPlaying.Bitrate {
+		techInfo += fmt.Sprintf(" (actual: %d)", int(m.actualKbps))
+	}
+	info.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render(techInfo))
+
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, info.String())
+	return borderStyle.Width(width).Height(height).Render(panel)
 }
 
 // renderFiltersPanel renders the filters panel

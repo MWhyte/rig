@@ -166,8 +166,9 @@ func (m *Model) playStation(station *radiobrowser.Station) (tea.Model, tea.Cmd) 
 
 	m.nowPlaying = station
 	m.isPlaying = true
+	m.waveFrame = 0
 
-	return m, nil
+	return m, m.waveTick()
 }
 
 // stopPlayback stops current playback
@@ -178,4 +179,5 @@ func (m *Model) stopPlayback() {
 	m.nowPlaying = nil
 	m.isPlaying = false
 	m.currentSong = ""
+	m.currentGenre = ""
 }

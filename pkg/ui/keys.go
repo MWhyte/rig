@@ -53,12 +53,24 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			// Currently playing - pause it
 			if err := m.player.Pause(); err == nil {
 				m.isPlaying = false
+				if m.sleepTimerActive {
+					m.sleepTimerPaused = true
+					elapsed := time.Since(m.sleepTimerStart)
+					m.sleepTimerRemaining = m.sleepTimerDuration - elapsed
+				}
 			}
 			return m, nil
 		} else if !m.isPlaying && m.nowPlaying != nil {
 			// Paused - resume it
 			if err := m.player.Resume(); err == nil {
 				m.isPlaying = true
+				if m.sleepTimerActive && m.sleepTimerPaused {
+					m.sleepTimerPaused = false
+					m.sleepTimerDuration = m.sleepTimerRemaining
+					m.sleepTimerStart = time.Now()
+					return m, tea.Batch(m.waveTick(), m.sleepTimerTick())
+				}
+				return m, m.waveTick()
 			}
 			return m, nil
 		} else if m.focusedSection == SectionStationList && len(m.stations) > 0 {
@@ -83,22 +95,16 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "+", "=":
 		// Increase volume
 		vol, _ := m.player.GetVolume()
-		newVol := vol + 5
-		if newVol > 100 {
-			newVol = 100
-		}
+		newVol := min(vol+5, 100)
 		_ = m.player.SetVolume(newVol)
-		return m, nil
+		return m, m.volumeBar.SetPercent(float64(newVol) / 100.0)
 
 	case "-", "_":
 		// Decrease volume
 		vol, _ := m.player.GetVolume()
-		newVol := vol - 5
-		if newVol < 0 {
-			newVol = 0
-		}
+		newVol := max(vol-5, 0)
 		_ = m.player.SetVolume(newVol)
-		return m, nil
+		return m, m.volumeBar.SetPercent(float64(newVol) / 100.0)
 
 	case "t":
 		// Open timer modal

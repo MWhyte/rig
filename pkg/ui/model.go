@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/progress"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"github.com/mrwhyte/rig/pkg/favorites"
@@ -85,13 +86,21 @@ type Model struct {
 	favManager *favorites.Manager
 
 	// Metadata
-	currentSong string
+	currentSong  string
+	currentGenre string
+	bufferSecs   float64
+	actualKbps   float64
+
+	// Playback UI
+	volumeBar progress.Model
+	waveFrame int
 
 	// Sleep Timer
 	sleepTimerActive    bool
+	sleepTimerPaused    bool
 	sleepTimerDuration  time.Duration // Total duration (e.g., 30min)
 	sleepTimerRemaining time.Duration // Time left
-	sleepTimerStart     time.Time     // When timer started
+	sleepTimerStart     time.Time     // When timer started (or last resumed)
 	showTimerModal      bool          // Show timer configuration modal
 	timerInput          textinput.Model
 
@@ -136,6 +145,13 @@ func NewModel() (*Model, error) {
 		fmt.Fprintf(os.Stderr, "Warning: Could not load favorites: %v\n", err)
 	}
 
+	volumeBar := progress.New(
+		progress.WithColors(colorAccent),
+		progress.WithoutPercentage(),
+		progress.WithFillCharacters('█', '░'),
+	)
+	volumeBar.EmptyColor = colorBorder
+
 	m := &Model{
 		view:                ViewLoading,
 		apiClient:           apiClient,
@@ -151,6 +167,7 @@ func NewModel() (*Model, error) {
 		favManager:          favManager,
 		timerInput:          timerInput,
 		sponsorAds:          loadAds(),
+		volumeBar:           volumeBar,
 	}
 
 	return m, nil
@@ -158,10 +175,12 @@ func NewModel() (*Model, error) {
 
 // Init initializes the model
 func (m *Model) Init() tea.Cmd {
+	vol, _ := m.player.GetVolume()
 	cmds := []tea.Cmd{
 		m.fetchPopularStations(),
 		m.fetchMetadata(),
 		m.tick(),
+		m.volumeBar.SetPercent(float64(vol) / 100.0),
 	}
 	if len(m.sponsorAds) > 1 {
 		cmds = append(cmds, m.sponsorRotateTick())
@@ -372,6 +391,13 @@ func (m *Model) sponsorWipeTick() tea.Cmd {
 	})
 }
 
+// waveTick returns a command that advances the sound wave animation frame
+func (m *Model) waveTick() tea.Cmd {
+	return tea.Tick(400*time.Millisecond, func(time.Time) tea.Msg {
+		return waveTickMsg{}
+	})
+}
+
 // sponsorPauseTick returns a command for the blank pause between wipes
 func (m *Model) sponsorPauseTick() tea.Cmd {
 	return tea.Tick(1*time.Second, func(time.Time) tea.Msg {
@@ -384,11 +410,14 @@ func (m *Model) pollMetadata() tea.Cmd {
 	return func() tea.Msg {
 		metadata, err := m.player.GetMetadata()
 		if err != nil {
-			// Silently fail - not critical
-			return metadataUpdateMsg{song: ""}
+			return metadataUpdateMsg{}
 		}
-
-		return metadataUpdateMsg{song: metadata.Title}
+		return metadataUpdateMsg{
+			song:       metadata.Title,
+			genre:      metadata.Genre,
+			bufferSecs: metadata.BufferSecs,
+			actualKbps: metadata.ActualKbps,
+		}
 	}
 }
 
@@ -409,7 +438,10 @@ type stationNameSuggestionsMsg struct {
 }
 type tickMsg struct{}
 type metadataUpdateMsg struct {
-	song string
+	song       string
+	genre      string
+	bufferSecs float64
+	actualKbps float64
 }
 
 // Sleep timer messages
@@ -417,6 +449,9 @@ type sleepTimerTickMsg struct{}
 type sleepTimerExpiredMsg struct{}
 type sleepTimerSetMsg struct{ duration time.Duration }
 type sleepTimerCancelledMsg struct{}
+
+// waveTickMsg advances the sound wave animation
+type waveTickMsg struct{}
 
 // Wipe animation phases
 type wipePhase int
@@ -508,6 +543,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case metadataUpdateMsg:
 		m.currentSong = msg.song
+		m.currentGenre = msg.genre
+		m.bufferSecs = msg.bufferSecs
+		m.actualKbps = msg.actualKbps
 		return m, nil
 
 	case sleepTimerSetMsg:
@@ -519,7 +557,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case sleepTimerTickMsg:
 		if !m.sleepTimerActive {
-			return m, nil // Timer was cancelled
+			return m, nil
+		}
+		if m.sleepTimerPaused {
+			return m, nil // Don't reschedule while paused
 		}
 
 		// Calculate remaining time
@@ -543,6 +584,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case sleepTimerCancelledMsg:
 		m.sleepTimerActive = false
+		m.sleepTimerPaused = false
 		m.sleepTimerRemaining = 0
 		return m, nil
 
@@ -579,6 +621,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.sponsorRotateTick()
 			}
 			return m, m.sponsorWipeTick()
+		}
+		return m, nil
+
+	case progress.FrameMsg:
+		newBar, cmd := m.volumeBar.Update(msg)
+		m.volumeBar = newBar
+		return m, cmd
+
+	case waveTickMsg:
+		if m.isPlaying {
+			m.waveFrame++
+			return m, m.waveTick()
 		}
 		return m, nil
 
