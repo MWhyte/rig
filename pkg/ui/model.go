@@ -61,9 +61,9 @@ type Model struct {
 	stations    []radiobrowser.Station
 
 	// Playback
-	player     player.Player
-	nowPlaying *radiobrowser.Station
-	isPlaying  bool
+	player    player.Player
+	playing   *radiobrowser.Station
+	isPlaying bool
 
 	// API
 	apiClient *radiobrowser.Client
@@ -702,7 +702,7 @@ func (m *Model) handleMouseClick(msg tea.MouseClickMsg) (tea.Model, tea.Cmd) {
 			// Clicked on Filters section
 			m.focusedSection = SectionFilters
 		}
-		// Right half is Now Playing - not focusable, so ignore
+		// Right half is Player - not focusable, so ignore
 		return m, nil
 	}
 

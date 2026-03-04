@@ -33,7 +33,7 @@ var (
 func (m *Model) renderMultiPanelLayout() string {
 	// Calculate dimensions
 	// Left column (70% width): Filters + Station List
-	// Right column (30% width): Now Playing + Sponsors
+	// Right column (30% width): Player + Sponsors
 	leftWidth := int(float64(m.width) * 0.70)
 	rightWidth := m.width - leftWidth
 
@@ -47,10 +47,10 @@ func (m *Model) renderMultiPanelLayout() string {
 	stationListPanel := m.renderStationListPanel(leftWidth-3, bottomHeight)
 	leftColumn := lipgloss.JoinVertical(lipgloss.Left, filtersPanel, stationListPanel)
 
-	// Build right column: Sponsors on top, Now Playing below
+	// Build right column: Sponsors on top, Player below
 	sponsorsPanel := m.renderSponsorsPanel(rightWidth-3, topHeight-2)
-	nowPlayingPanel := m.renderNowPlayingPanel(rightWidth-3, bottomHeight)
-	rightColumn := lipgloss.JoinVertical(lipgloss.Left, sponsorsPanel, nowPlayingPanel)
+	playerPanel := m.renderPlayerPanel(rightWidth-3, bottomHeight)
+	rightColumn := lipgloss.JoinVertical(lipgloss.Left, sponsorsPanel, playerPanel)
 
 	// Combine columns horizontally
 	mainContent := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, rightColumn)
@@ -146,18 +146,18 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
-// renderNowPlayingPanel renders the now playing panel
-func (m *Model) renderNowPlayingPanel(width, height int) string {
+// renderPlayerPanel renders the player panel
+func (m *Model) renderPlayerPanel(width, height int) string {
 	borderStyle := inactiveBorderStyle
 	titleStyle := panelTitleStyle
-	title := titleStyle.Render("Now Playing")
+	title := titleStyle.Render("Player")
 
 	maxLen := width - 4
 	if maxLen < 10 {
 		maxLen = 10
 	}
 
-	if m.nowPlaying == nil {
+	if m.playing == nil {
 		content := "\n " +
 			lipgloss.NewStyle().Foreground(colorMuted).Render("No station playing") +
 			"\n\n " +
@@ -172,7 +172,7 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	// Station name
 	info.WriteString("\n ")
 	info.WriteString(lipgloss.NewStyle().Bold(true).Foreground(colorTitle).
-		Render(truncate(m.nowPlaying.Name, maxLen)))
+		Render(truncate(m.playing.Name, maxLen)))
 	info.WriteString("\n ")
 
 	// Current song
@@ -186,7 +186,7 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	info.WriteString("\n\n ")
 
 	// Country · Genre
-	location := m.nowPlaying.Country
+	location := m.playing.Country
 	if m.currentGenre != "" {
 		location += " · " + m.currentGenre
 	}
@@ -235,11 +235,11 @@ func (m *Model) renderNowPlayingPanel(width, height int) string {
 	info.WriteString("\n ")
 
 	// Tech info — muted, minimal
-	techInfo := m.nowPlaying.Codec
-	if m.nowPlaying.Bitrate > 0 {
-		techInfo += fmt.Sprintf(" · %d kbps", m.nowPlaying.Bitrate)
+	techInfo := m.playing.Codec
+	if m.playing.Bitrate > 0 {
+		techInfo += fmt.Sprintf(" · %d kbps", m.playing.Bitrate)
 	}
-	if m.actualKbps > 0 && int(m.actualKbps) != m.nowPlaying.Bitrate {
+	if m.actualKbps > 0 && int(m.actualKbps) != m.playing.Bitrate {
 		techInfo += fmt.Sprintf(" (actual: %d)", int(m.actualKbps))
 	}
 	info.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render(techInfo))

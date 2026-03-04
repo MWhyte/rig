@@ -49,7 +49,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 	case "space":
 		// Toggle play/pause, or play selected station
-		if m.isPlaying && m.nowPlaying != nil {
+		if m.isPlaying && m.playing != nil {
 			// Currently playing - pause it
 			if err := m.player.Pause(); err == nil {
 				m.isPlaying = false
@@ -60,7 +60,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 				}
 			}
 			return m, nil
-		} else if !m.isPlaying && m.nowPlaying != nil {
+		} else if !m.isPlaying && m.playing != nil {
 			// Paused - resume it
 			if err := m.player.Resume(); err == nil {
 				m.isPlaying = true
