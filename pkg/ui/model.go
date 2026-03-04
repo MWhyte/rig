@@ -10,6 +10,7 @@ import (
 	"charm.land/bubbles/v2/progress"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"github.com/mrwhyte/rig/pkg/config"
 	"github.com/mrwhyte/rig/pkg/favorites"
 	"github.com/mrwhyte/rig/pkg/player"
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
@@ -104,6 +105,11 @@ type Model struct {
 	showTimerModal      bool          // Show timer configuration modal
 	timerInput          textinput.Model
 
+	// Theme modal
+	showThemeModal     bool
+	themeModalIndex    int // currently highlighted theme in modal
+	originalThemeIndex int // theme before modal was opened (for esc revert)
+
 	// Sponsors
 	sponsorAds       []string  // Loaded ad content
 	sponsorIndex     int       // Current ad index
@@ -143,6 +149,11 @@ func NewModel() (*Model, error) {
 	if err != nil {
 		// Log error but don't fail - favorites not critical
 		fmt.Fprintf(os.Stderr, "Warning: Could not load favorites: %v\n", err)
+	}
+
+	// Load and apply saved theme
+	if cfg, err := config.Load(); err == nil && cfg.Theme != "" {
+		setTheme(themeIndexByName(cfg.Theme))
 	}
 
 	volumeBar := progress.New(
@@ -661,6 +672,8 @@ func (m *Model) View() tea.View {
 		content = fmt.Sprintf("Error: %v\n\nPress 'q' to quit", m.err)
 	} else if m.showTimerModal {
 		content = m.renderTimerModal()
+	} else if m.showThemeModal {
+		content = m.renderThemeModal()
 	} else {
 		switch m.view {
 		case ViewLoading:

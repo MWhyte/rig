@@ -6,12 +6,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mrwhyte/rig/pkg/config"
+
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 )
 
 // handleKeyPress handles keyboard input
 func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	if m.showThemeModal {
+		return m.handleThemeModalInput(msg)
+	}
+
 	// If timer modal is open, handle input differently
 	if m.showTimerModal {
 		return m.handleTimerModalInput(msg)
@@ -105,6 +111,13 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		newVol := max(vol-5, 0)
 		_ = m.player.SetVolume(newVol)
 		return m, m.volumeBar.SetPercent(float64(newVol) / 100.0)
+
+	case "ctrl+t":
+		// Open theme picker modal
+		m.originalThemeIndex = themeIndex
+		m.themeModalIndex = themeIndex
+		m.showThemeModal = true
+		return m, nil
 
 	case "t":
 		// Open timer modal
@@ -520,4 +533,38 @@ func (m *Model) handleTimerModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 	var cmd tea.Cmd
 	m.timerInput, cmd = m.timerInput.Update(msg)
 	return m, cmd
+}
+
+// handleThemeModalInput handles keyboard input in the theme picker modal.
+func (m *Model) handleThemeModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "ctrl+c":
+		m.stopPlayback()
+		return m, tea.Quit
+
+	case "up", "k":
+		m.themeModalIndex = max(m.themeModalIndex-1, 0)
+		m.applyTheme(m.themeModalIndex)
+		return m, nil
+
+	case "down", "j":
+		m.themeModalIndex = min(m.themeModalIndex+1, len(themes)-1)
+		m.applyTheme(m.themeModalIndex)
+		return m, nil
+
+	case "enter":
+		// Confirm — save to config
+		m.showThemeModal = false
+		cfg := &config.Config{Theme: themes[themeIndex].Name}
+		_ = config.Save(cfg)
+		return m, nil
+
+	case "esc":
+		// Revert to original theme
+		m.applyTheme(m.originalThemeIndex)
+		m.showThemeModal = false
+		return m, nil
+	}
+
+	return m, nil
 }

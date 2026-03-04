@@ -7,27 +7,21 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-var (
-	// Border styles
-	activeBorderStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(colorAccent)
+func activeBorderStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(colorAccent)
+}
 
-	inactiveBorderStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(colorBorder)
+func inactiveBorderStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(colorBorder)
+}
 
-	// Panel styles
-	panelTitleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(colorTitle).
-			Padding(0, 1)
+func panelTitleStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Bold(true).Foreground(colorTitle).Padding(0, 1)
+}
 
-	activePanelTitleStyle = lipgloss.NewStyle().
-				Bold(true).
-				Foreground(colorAccent).
-				Padding(0, 1)
-)
+func activePanelTitleStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Bold(true).Foreground(colorAccent).Padding(0, 1)
+}
 
 // renderMultiPanelLayout renders the main multi-panel layout
 func (m *Model) renderMultiPanelLayout() string {
@@ -90,7 +84,7 @@ func (m *Model) renderFooter() string {
 		shortcuts = "↑↓/jk: select • enter: edit • c: clear"
 	}
 
-	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • t: sleep timer • ctrl+c: quit",
+	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • t: sleep timer • ctrl+t: theme • ctrl+c: quit",
 		m.focusedSection.String(),
 		shortcuts,
 	)
@@ -104,11 +98,11 @@ func (m *Model) renderStationListPanel(width, height int) string {
 	m.stationList.SetSize(width, height-2)
 
 	// Get border style based on focus
-	borderStyle := inactiveBorderStyle
-	titleStyle := panelTitleStyle
+	borderStyle := inactiveBorderStyle()
+	titleStyle := panelTitleStyle()
 	if m.focusedSection == SectionStationList {
-		borderStyle = activeBorderStyle
-		titleStyle = activePanelTitleStyle
+		borderStyle = activeBorderStyle()
+		titleStyle = activePanelTitleStyle()
 	}
 
 	// Build content
@@ -148,8 +142,8 @@ func truncate(s string, maxLen int) string {
 
 // renderPlayerPanel renders the player panel
 func (m *Model) renderPlayerPanel(width, height int) string {
-	borderStyle := inactiveBorderStyle
-	titleStyle := panelTitleStyle
+	borderStyle := inactiveBorderStyle()
+	titleStyle := panelTitleStyle()
 	title := titleStyle.Render("Player")
 
 	maxLen := width - 4
@@ -250,11 +244,11 @@ func (m *Model) renderPlayerPanel(width, height int) string {
 
 // renderFiltersPanel renders the filters panel
 func (m *Model) renderFiltersPanel(width, height int) string {
-	borderStyle := inactiveBorderStyle
-	titleStyle := panelTitleStyle
+	borderStyle := inactiveBorderStyle()
+	titleStyle := panelTitleStyle()
 	if m.focusedSection == SectionFilters {
-		borderStyle = activeBorderStyle
-		titleStyle = activePanelTitleStyle
+		borderStyle = activeBorderStyle()
+		titleStyle = activePanelTitleStyle()
 	}
 
 	title := titleStyle.Render("Filters")
@@ -360,6 +354,39 @@ func (m *Model) renderFilterList() string {
 	return content.String()
 }
 
+// renderThemeModal renders the theme picker modal with live preview.
+func (m *Model) renderThemeModal() string {
+	var content strings.Builder
+	content.WriteString("\n")
+
+	for i, t := range themes {
+		if i == m.themeModalIndex {
+			content.WriteString(lipgloss.NewStyle().Foreground(colorAccent).Bold(true).
+				Render(fmt.Sprintf("  → %s", t.Name)))
+		} else {
+			content.WriteString(lipgloss.NewStyle().Foreground(colorMuted).
+				Render(fmt.Sprintf("    %s", t.Name)))
+		}
+		content.WriteString("\n")
+	}
+
+	content.WriteString("\n")
+	content.WriteString(lipgloss.NewStyle().Foreground(colorDim).
+		Render("  ↑↓/jk: navigate • enter: select • esc: cancel"))
+
+	title := lipgloss.NewStyle().Bold(true).Foreground(colorTitle).Padding(0, 1).Render("Theme")
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, content.String())
+
+	modal := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorAccent).
+		Padding(1, 2).
+		Width(30).
+		Render(panel)
+
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
+}
+
 // renderTimerModal renders the sleep timer configuration modal
 func (m *Model) renderTimerModal() string {
 	// Modal dimensions
@@ -437,14 +464,14 @@ func (m *Model) renderTimerModal() string {
 
 // renderSponsorsPanel renders the sponsors/ads panel with wipe animation
 func (m *Model) renderSponsorsPanel(width, height int) string {
-	title := panelTitleStyle.Render("Sponsors")
+	title := panelTitleStyle().Render("Sponsors")
 
 	if len(m.sponsorAds) == 0 {
 		placeholder := lipgloss.NewStyle().
 			Foreground(colorMuted).
 			Render("\n  Your ad here")
 		panel := lipgloss.JoinVertical(lipgloss.Left, title, placeholder)
-		return inactiveBorderStyle.
+		return inactiveBorderStyle().
 			Width(width).
 			Height(height).
 			Render(panel)
@@ -493,7 +520,7 @@ func (m *Model) renderSponsorsPanel(width, height int) string {
 	adStyle := lipgloss.NewStyle().Foreground(colorDim)
 	panel := lipgloss.JoinVertical(lipgloss.Left, title, adStyle.Render(content))
 
-	return inactiveBorderStyle.
+	return inactiveBorderStyle().
 		Width(width).
 		Height(height).
 		Render(panel)

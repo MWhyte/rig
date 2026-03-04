@@ -171,6 +171,16 @@ func (m *Model) playStation(station *radiobrowser.Station) (tea.Model, tea.Cmd) 
 	return m, m.waveTick()
 }
 
+// applyTheme sets the theme by index and refreshes all theme-dependent UI state.
+func (m *Model) applyTheme(index int) {
+	setTheme(index)
+	// Refresh volume bar colors
+	m.volumeBar.FullColor = colorAccent
+	m.volumeBar.EmptyColor = colorBorder
+	// Refresh list delegate styles
+	m.initList()
+}
+
 // stopPlayback stops current playback
 func (m *Model) stopPlayback() {
 	if m.player != nil {
