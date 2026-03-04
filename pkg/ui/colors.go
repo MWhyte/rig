@@ -72,6 +72,16 @@ var themes = []Theme{
 		Warning: adaptive("#B4637A", "#EBBCBA"),
 		Label:   adaptive("#26233A", "#E0DEF4"),
 	},
+	{
+		Name:    "Neon",
+		Accent:  adaptive("#C026D3", "#FF2D9F"),
+		Title:   adaptive("#18181B", "#FFFFFF"),
+		Muted:   adaptive("#7C3AED", "#BD93F9"),
+		Border:  adaptive("#6D28D9", "#3D1A78"),
+		Dim:     adaptive("#8B5CF6", "#555580"),
+		Warning: adaptive("#F59E0B", "#00E5FF"),
+		Label:   adaptive("#4C1D95", "#E0AAFF"),
+	},
 }
 
 var themeIndex = 0
