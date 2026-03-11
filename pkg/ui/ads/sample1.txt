@@ -1,5 +1,0 @@
-  ♪ rig.fm
-
-  Terminal Radio
-  Free & Open Source
-  github.com/mrwhyte/rig

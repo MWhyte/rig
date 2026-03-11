@@ -76,7 +76,6 @@ type Model struct {
 	tags                []radiobrowser.Tag
 	languages           []radiobrowser.Language
 	editingFilter       FilterField
-	filterInput         textinput.Model
 	selectedFilterIndex int // Tracks which filter is selected (0-4)
 
 	// Autocomplete
@@ -131,11 +130,6 @@ func NewModel() (*Model, error) {
 		return nil, fmt.Errorf("failed to create player: %w", err)
 	}
 
-	// Create filter text input
-	ti := textinput.New()
-	ti.Placeholder = "Type to filter..."
-	ti.CharLimit = 50
-
 	// Create timer input
 	timerInput := textinput.New()
 	timerInput.Placeholder = "Enter minutes (e.g., 30)"
@@ -168,14 +162,14 @@ func NewModel() (*Model, error) {
 		focusedSection:      SectionStationList,
 		filters:             Filters{},
 		editingFilter:       FilterNone,
-		filterInput:         ti,
-		selectedFilterIndex: 0, // Start with first filter selected
-		autocomplete:        NewAutocompleteModel(),
-		autocompleteData:    make(map[FilterField][]string),
-		stationNameCache:    make(map[string][]string),
-		favManager:          favManager,
-		timerInput:          timerInput,
-		volumeBar:           volumeBar,
+		selectedFilterIndex: 0,
+
+		autocomplete:     NewAutocompleteModel(),
+		autocompleteData: make(map[FilterField][]string),
+		stationNameCache: make(map[string][]string),
+		favManager:       favManager,
+		timerInput:       timerInput,
+		volumeBar:        volumeBar,
 	}
 
 	return m, nil
