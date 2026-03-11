@@ -30,7 +30,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(./rig:*)",
       "WebFetch(domain:docs.github.com)",
-      "WebFetch(domain:www.cazzulino.com)"
+      "WebFetch(domain:www.cazzulino.com)",
+      "WebFetch(domain:www.gnu.org)"
     ]
   }
 }

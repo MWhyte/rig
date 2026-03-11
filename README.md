@@ -46,9 +46,12 @@ go build -o rig ./cmd/rig
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
 - [Radio Browser API](https://www.radio-browser.info/) - Radio station database
 
+
 ## License
 
-MIT
+GNU Affero General Public License v3.0 — see [LICENSE](LICENSE) for details.
+
+Free to use and build on, provided derivative works are also open source and non-commercial. Commercial use requires explicit permission from the author.
 
 ## Contributing
 
