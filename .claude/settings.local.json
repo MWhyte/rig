@@ -28,7 +28,9 @@
       "WebFetch(domain:www.mwhyte.dev)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(./rig:*)"
+      "Bash(./rig:*)",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:www.cazzulino.com)"
     ]
   }
 }

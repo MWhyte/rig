@@ -1,0 +1,58 @@
+name: Update Sponsors
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Nightly at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  update-sponsors:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch sponsors from GitHub GraphQL API
+        env:
+          GH_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
+        run: |
+          RESPONSE=$(gh api graphql -f query='
+            query {
+              viewer {
+                sponsorshipsAsMaintainer(first: 100, includePrivate: false) {
+                  nodes {
+                    sponsorEntity {
+                      ... on User { login name }
+                      ... on Organization { login name }
+                    }
+                    createdAt
+                  }
+                }
+              }
+            }')
+
+          UPDATED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          echo "$RESPONSE" | jq --arg updated_at "$UPDATED_AT" '{
+            updated_at: $updated_at,
+            sponsors: [
+              .data.viewer.sponsorshipsAsMaintainer.nodes[]
+              | select(.sponsorEntity != null)
+              | {
+                  login: .sponsorEntity.login,
+                  name: (.sponsorEntity.name // .sponsorEntity.login)
+                }
+            ]
+          }' > rig-sponsors.json
+
+          echo "Generated rig-sponsors.json:"
+          cat rig-sponsors.json
+
+      - name: Update public Gist
+        env:
+          GH_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
+          GIST_ID: ${{ secrets.SPONSORS_GIST_ID }}
+        run: |
+          CONTENT=$(cat rig-sponsors.json | jq -Rs .)
+          curl -s -X PATCH \
+            -H "Authorization: bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "{\"files\": {\"rig-sponsors.json\": {\"content\": $CONTENT}}}" \
+            "https://api.github.com/gists/$GIST_ID" | jq '.id'

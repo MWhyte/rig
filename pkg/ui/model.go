@@ -14,6 +14,7 @@ import (
 	"github.com/mrwhyte/rig/pkg/favorites"
 	"github.com/mrwhyte/rig/pkg/player"
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
+	"github.com/mrwhyte/rig/pkg/sponsors"
 )
 
 // ViewMode represents the current view
@@ -111,11 +112,8 @@ type Model struct {
 	originalThemeIndex int // theme before modal was opened (for esc revert)
 
 	// Sponsors
-	sponsorAds       []string  // Loaded ad content
-	sponsorIndex     int       // Current ad index
-	sponsorPrevIndex int       // Previous ad index (for wipe transition)
-	sponsorFrame     int       // Current animation frame within phase
-	sponsorWipePhase wipePhase // Current phase of the wipe animation
+	liveSponsors        []sponsors.Sponsor // Live sponsors loaded from Gist/cache
+	sponsorScrollOffset int                // Top of visible window into the virtual scroll list
 
 }
 
@@ -177,7 +175,6 @@ func NewModel() (*Model, error) {
 		stationNameCache:    make(map[string][]string),
 		favManager:          favManager,
 		timerInput:          timerInput,
-		sponsorAds:          loadAds(),
 		volumeBar:           volumeBar,
 	}
 
@@ -187,16 +184,13 @@ func NewModel() (*Model, error) {
 // Init initializes the model
 func (m *Model) Init() tea.Cmd {
 	vol, _ := m.player.GetVolume()
-	cmds := []tea.Cmd{
+	return tea.Batch(
 		m.fetchPopularStations(),
 		m.fetchMetadata(),
+		m.fetchSponsors(),
 		m.tick(),
-		m.volumeBar.SetPercent(float64(vol) / 100.0),
-	}
-	if len(m.sponsorAds) > 1 {
-		cmds = append(cmds, m.sponsorRotateTick())
-	}
-	return tea.Batch(cmds...)
+		m.volumeBar.SetPercent(float64(vol)/100.0),
+	)
 }
 
 // fetchPopularStations fetches popular stations from the API
@@ -388,17 +382,18 @@ func (m *Model) sleepTimerTick() tea.Cmd {
 	})
 }
 
-// sponsorRotateTick returns a command that triggers ad rotation
-func (m *Model) sponsorRotateTick() tea.Cmd {
-	return tea.Tick(60*time.Second, func(time.Time) tea.Msg {
-		return sponsorRotateMsg{}
-	})
+// fetchSponsors loads live sponsors from cache or Gist in the background.
+func (m *Model) fetchSponsors() tea.Cmd {
+	return func() tea.Msg {
+		load, _ := sponsors.Load()
+		return sponsorsMsg{load}
+	}
 }
 
-// sponsorWipeTick returns a command that advances the wipe animation
-func (m *Model) sponsorWipeTick() tea.Cmd {
-	return tea.Tick(120*time.Millisecond, func(time.Time) tea.Msg {
-		return sponsorWipeMsg{}
+// sponsorScrollTick advances the scroll offset every 2 seconds.
+func (m *Model) sponsorScrollTick() tea.Cmd {
+	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
+		return sponsorScrollMsg{}
 	})
 }
 
@@ -406,13 +401,6 @@ func (m *Model) sponsorWipeTick() tea.Cmd {
 func (m *Model) waveTick() tea.Cmd {
 	return tea.Tick(400*time.Millisecond, func(time.Time) tea.Msg {
 		return waveTickMsg{}
-	})
-}
-
-// sponsorPauseTick returns a command for the blank pause between wipes
-func (m *Model) sponsorPauseTick() tea.Cmd {
-	return tea.Tick(1*time.Second, func(time.Time) tea.Msg {
-		return sponsorWipeMsg{}
 	})
 }
 
@@ -464,19 +452,9 @@ type sleepTimerCancelledMsg struct{}
 // waveTickMsg advances the sound wave animation
 type waveTickMsg struct{}
 
-// Wipe animation phases
-type wipePhase int
-
-const (
-	wipeIdle  wipePhase = iota // No animation
-	wipeOut                    // Clearing old ad top-to-bottom
-	wipePause                  // Blank pause between ads
-	wipeIn                     // Revealing new ad top-to-bottom
-)
-
 // Sponsor messages
-type sponsorRotateMsg struct{}
-type sponsorWipeMsg struct{}
+type sponsorsMsg struct{ list []sponsors.Sponsor }
+type sponsorScrollMsg struct{}
 
 // Update handles messages and updates the model
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -599,39 +577,19 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.sleepTimerRemaining = 0
 		return m, nil
 
-	case sponsorRotateMsg:
-		if len(m.sponsorAds) > 1 {
-			m.sponsorPrevIndex = m.sponsorIndex
-			m.sponsorFrame = 0
-			m.sponsorWipePhase = wipeOut
-			return m, m.sponsorWipeTick()
+	case sponsorsMsg:
+		m.liveSponsors = msg.list
+		if len(m.liveSponsors) > 1 {
+			return m, m.sponsorScrollTick()
 		}
-		return m, m.sponsorRotateTick()
+		return m, nil
 
-	case sponsorWipeMsg:
-		switch m.sponsorWipePhase {
-		case wipeOut:
-			m.sponsorFrame++
-			adLineCount := len(strings.Split(m.sponsorAds[m.sponsorPrevIndex], "\n"))
-			if m.sponsorFrame >= adLineCount {
-				m.sponsorWipePhase = wipePause
-				m.sponsorFrame = 0
-				return m, m.sponsorPauseTick()
-			}
-			return m, m.sponsorWipeTick()
-		case wipePause:
-			m.sponsorIndex = (m.sponsorIndex + 1) % len(m.sponsorAds)
-			m.sponsorWipePhase = wipeIn
-			m.sponsorFrame = 0
-			return m, m.sponsorWipeTick()
-		case wipeIn:
-			m.sponsorFrame++
-			adLineCount := len(strings.Split(m.sponsorAds[m.sponsorIndex], "\n"))
-			if m.sponsorFrame >= adLineCount {
-				m.sponsorWipePhase = wipeIdle
-				return m, m.sponsorRotateTick()
-			}
-			return m, m.sponsorWipeTick()
+	case sponsorScrollMsg:
+		if len(m.liveSponsors) > 1 {
+			// Virtual list length = 2*n (name + dot per sponsor)
+			virtualLen := len(m.liveSponsors) * 2
+			m.sponsorScrollOffset = (m.sponsorScrollOffset + 1) % virtualLen
+			return m, m.sponsorScrollTick()
 		}
 		return m, nil
 

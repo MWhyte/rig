@@ -462,66 +462,51 @@ func (m *Model) renderTimerModal() string {
 	return centered
 }
 
-// renderSponsorsPanel renders the sponsors/ads panel with wipe animation
+// renderSponsorsPanel renders the sponsors panel with a vertical scrolling list.
 func (m *Model) renderSponsorsPanel(width, height int) string {
-	title := panelTitleStyle().Render("Sponsors")
+	title := panelTitleStyle().Render("★ Sponsors")
 
-	if len(m.sponsorAds) == 0 {
-		placeholder := lipgloss.NewStyle().
-			Foreground(colorMuted).
-			Render("\n  Your ad here")
-		panel := lipgloss.JoinVertical(lipgloss.Left, title, placeholder)
-		return inactiveBorderStyle().
-			Width(width).
-			Height(height).
-			Render(panel)
+	if len(m.liveSponsors) == 0 {
+		fallback := lipgloss.NewStyle().
+			Foreground(colorDim).
+			Render("\n  ♥ Sponsor rig.fm")
+		panel := lipgloss.JoinVertical(lipgloss.Left, title, fallback)
+		return inactiveBorderStyle().Width(width).Height(height).Render(panel)
 	}
 
-	currentLines := strings.Split(m.sponsorAds[m.sponsorIndex], "\n")
-
-	var displayLines []string
-
-	switch m.sponsorWipePhase {
-	case wipeOut:
-		prevLines := strings.Split(m.sponsorAds[m.sponsorPrevIndex], "\n")
-		for i, line := range prevLines {
-			if i < m.sponsorFrame {
-				displayLines = append(displayLines, "")
-			} else {
-				displayLines = append(displayLines, line)
-			}
+	// Build virtual item list: [name, dot, name, dot, ...]
+	virtual := make([]string, len(m.liveSponsors)*2)
+	for i, s := range m.liveSponsors {
+		display := s.Name
+		if display == "" {
+			display = s.Login
 		}
-	case wipePause:
-		// Show blank
-		displayLines = []string{""}
-	case wipeIn:
-		for i, line := range currentLines {
-			if i < m.sponsorFrame {
-				displayLines = append(displayLines, line)
-			} else {
-				displayLines = append(displayLines, "")
-			}
+		virtual[i*2] = display
+		virtual[i*2+1] = "·"
+	}
+
+	// Window height = inner panel height minus border (2) and title (1)
+	windowHeight := height - 3
+	if windowHeight < 1 {
+		windowHeight = 1
+	}
+
+	nameStyle := lipgloss.NewStyle().Foreground(colorMuted)
+	dotStyle := lipgloss.NewStyle().Foreground(colorDim)
+
+	var lines []string
+	n := len(virtual)
+	for i := 0; i < windowHeight; i++ {
+		idx := (m.sponsorScrollOffset + i) % n
+		item := virtual[idx]
+		if idx%2 == 0 {
+			lines = append(lines, "  "+nameStyle.Render(item))
+		} else {
+			lines = append(lines, "  "+dotStyle.Render(item))
 		}
-	default:
-		displayLines = currentLines
 	}
 
-	// Clamp to available inner height: border(2) + title(1) = 3 reserved rows
-	maxLines := height - 3
-	if maxLines < 1 {
-		maxLines = 1
-	}
-	if len(displayLines) > maxLines {
-		displayLines = displayLines[:maxLines]
-	}
-
-	content := strings.Join(displayLines, "\n")
-
-	adStyle := lipgloss.NewStyle().Foreground(colorDim)
-	panel := lipgloss.JoinVertical(lipgloss.Left, title, adStyle.Render(content))
-
-	return inactiveBorderStyle().
-		Width(width).
-		Height(height).
-		Render(panel)
+	content := strings.Join(lines, "\n")
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
+	return inactiveBorderStyle().Width(width).Height(height).Render(panel)
 }
