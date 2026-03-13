@@ -4,13 +4,14 @@
 
 Listen to internet radio from the comfort of your terminal.
 
-## Features (Coming Soon)
+## Features
 
 - Browse thousands of radio stations worldwide
-- Search by genre, country, or station name
+- Search by genre, country, language, or station name
 - Beautiful terminal UI built with Bubble Tea
-- Save your favorite stations
-- Track listening history
+- Save favourite stations
+- Volume control and sleep timer
+- Multiple themes
 - Keyboard-driven interface
 
 ## Installation
@@ -29,7 +30,7 @@ rig
 
 ### Prerequisites
 
-- Go 1.21 or later
+- Go 1.22 or later
 
 ### Building from source
 
@@ -46,6 +47,10 @@ go build -o rig ./cmd/rig
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
 - [Radio Browser API](https://www.radio-browser.info/) - Radio station database
 
+
+## Sponsors
+
+If you find rig.fm useful, consider sponsoring its development: [github.com/sponsors/mrwhyte](https://github.com/sponsors/mrwhyte)
 
 ## License
 

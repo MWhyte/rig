@@ -32,3 +32,6 @@ Thumbs.db
 
 # Dependency directories
 /vendor/
+
+# Claude AI
+.claude/
