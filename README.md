@@ -16,9 +16,19 @@ Listen to internet radio from the comfort of your terminal.
 
 ## Installation
 
+**Homebrew (macOS)**
+```bash
+brew install mrwhyte/tap/rig
+```
+
+**Go install**
 ```bash
 go install github.com/mrwhyte/rig/cmd/rig@latest
 ```
+
+**Binary download**
+
+Download the latest release from [github.com/mrwhyte/rig/releases](https://github.com/mrwhyte/rig/releases).
 
 ## Usage
 
