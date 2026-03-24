@@ -31,10 +31,15 @@ func (m *Model) renderMultiPanelLayout() string {
 	leftWidth := int(float64(m.width) * 0.70)
 	rightWidth := m.width - leftWidth
 
+	// Reserve space for header and footer
+	headerHeight := lipgloss.Height(m.renderHeader())
+	footerHeight := lipgloss.Height(m.renderFooter())
+	chrome := headerHeight + footerHeight
+
 	// topHeight must be at least 11: border(2) + title(1) + blank(1) + 5 filters(5) + blank(1) + help(1)
 	// to prevent the filters panel from overflowing and misaligning the station list.
 	topHeight := max(11, int(float64(m.height)*0.30))
-	bottomHeight := m.height - topHeight - 8
+	bottomHeight := m.height - topHeight - chrome
 
 	// Build left column: Filters on top, Station List below
 	filtersPanel := m.renderFiltersPanel(leftWidth-3, topHeight-2)
@@ -94,8 +99,8 @@ func (m *Model) renderFooter() string {
 
 // renderStationListPanel renders the station list panel
 func (m *Model) renderStationListPanel(width, height int) string {
-	// Set list size
-	m.stationList.SetSize(width, height-2)
+	// width-2 for border side chars, height-3 for border top/bottom + title line
+	m.stationList.SetSize(width-2, height-3)
 
 	// Get border style based on focus
 	borderStyle := inactiveBorderStyle()
@@ -110,6 +115,9 @@ func (m *Model) renderStationListPanel(width, height int) string {
 	content := m.stationList.View()
 
 	panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
+
+	// Truncate to inner height (height minus border) so the panel never overflows
+	panel = truncateLines(panel, height-2)
 
 	return borderStyle.
 		Width(width).
@@ -127,6 +135,15 @@ var waveFrames = []string{
 	"▁▂▃▂▁▂▃▂",
 	"▂▃▂▁▂▃▂▁",
 	"▃▂▁▂▃▂▁▁",
+}
+
+// truncateLines limits s to at most n lines.
+func truncateLines(s string, n int) string {
+	lines := strings.Split(s, "\n")
+	if len(lines) <= n {
+		return s
+	}
+	return strings.Join(lines[:n], "\n")
 }
 
 // truncate cuts s to maxLen, appending "..." if needed
