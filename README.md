@@ -1,6 +1,9 @@
-# rig.fm
+# 📻 rig.fm
 
 **Internet radio in your terminal. Beautiful, fast, and keyboard-driven.**
+
+[![Release](https://github.com/MWhyte/rig/actions/workflows/release.yml/badge.svg)](https://github.com/MWhyte/rig/actions/workflows/release.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 [Install](#installation) | [Features](#features) | [Usage](#usage) | [Contributing](CONTRIBUTING.md) | [License](#license)
 
@@ -12,12 +15,12 @@ No accounts. No ads. Just radio.
 
 ## Features
 
-- Browse thousands of radio stations worldwide
-- Search by genre, country, language, or station name
-- Beautiful terminal UI with multiple panels
-- Keyboard-driven interface for fast navigation
-- Volume control
-- Now playing display with station metadata
+- 🌍 Browse thousands of radio stations worldwide
+- 🔍 Search by genre, country, language, or station name
+- 🎨 Beautiful terminal UI with multiple themes
+- ⌨️ Keyboard-driven interface for fast navigation
+- ⭐ Save your favourite stations
+- 🎵 Now playing display with station metadata
 
 ### Search and play
 <!-- Replace with actual gif -->
