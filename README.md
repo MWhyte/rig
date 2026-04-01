@@ -4,18 +4,6 @@
 
 [Install](#installation) | [Features](#features) | [Usage](#usage) | [Contributing](CONTRIBUTING.md) | [License](#license)
 
-### Search and play
-<!-- Replace with actual gif -->
-![Searching and playing a station](.docs/assets/search.gif)
-
-### Themes
-<!-- Replace with actual gif -->
-![Switching themes](.docs/assets/themes.gif)
-
-### Favourites
-<!-- Replace with actual gif -->
-![Managing favourites](.docs/assets/favourites.gif)
-
 ## What is rig.fm?
 
 rig.fm is a terminal radio player that lets you browse, search, and listen to thousands of internet radio stations without leaving the command line. Powered by the [Radio Browser](https://www.radio-browser.info/) directory, it gives you access to stations from around the world, all wrapped in a beautiful TUI built with [Bubble Tea](https://github.com/charmbracelet/bubbletea).
@@ -31,9 +19,18 @@ No accounts. No ads. Just radio.
 - Volume control
 - Now playing display with station metadata
 
-<!-- Replace with actual screenshots/gifs -->
-<!-- <img src=".doc/assets/search.gif" alt="Searching stations" width="800"> -->
-<!-- <img src=".doc/assets/playing.gif" alt="Now playing" width="800"> -->
+### Search and play
+<!-- Replace with actual gif -->
+![Searching and playing a station](.docs/assets/search.gif)
+
+### Themes
+<!-- Replace with actual gif -->
+![Switching themes](.docs/assets/themes.gif)
+
+### Favourites
+<!-- Replace with actual gif -->
+![Managing favourites](.docs/assets/favourites.gif)
+
 
 ## Installation
 

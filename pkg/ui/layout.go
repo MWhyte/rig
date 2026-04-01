@@ -481,12 +481,12 @@ func (m *Model) renderTimerModal() string {
 
 // renderSponsorsPanel renders the sponsors panel with a vertical scrolling list.
 func (m *Model) renderSponsorsPanel(width, height int) string {
-	title := panelTitleStyle().Render("★ Sponsors")
+	title := panelTitleStyle().Render("♥ Sponsors")
 
 	if len(m.liveSponsors) == 0 {
 		fallback := lipgloss.NewStyle().
 			Foreground(colorDim).
-			Render("\n  ♥ Sponsor rig.fm")
+			Render("\n  Sponsor rig.fm: github.com/sponsors/MWhyte")
 		panel := lipgloss.JoinVertical(lipgloss.Left, title, fallback)
 		return inactiveBorderStyle().Width(width).Height(height).Render(panel)
 	}
