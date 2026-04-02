@@ -349,10 +349,10 @@ func (m *Model) renderFilterList() string {
 
 		// Format line
 		labelStyle := lipgloss.NewStyle().Foreground(colorLabel)
-		content.WriteString(fmt.Sprintf("%s%s %s\n",
+		fmt.Fprintf(&content, "%s%s %s\n",
 			prefix,
 			labelStyle.Render(fmt.Sprintf("%d. %s:", filter.index+1, filter.label)),
-			valueStyle.Render(valueText)))
+			valueStyle.Render(valueText))
 	}
 
 	content.WriteString("\n")

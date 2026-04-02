@@ -110,7 +110,7 @@ func (m *AutocompleteModel) View(width, height int) string {
 
 	// Field name and text input
 	content.WriteString("\n")
-	content.WriteString(fmt.Sprintf("  %s: ", m.fieldName))
+	fmt.Fprintf(&content, "  %s: ", m.fieldName)
 	content.WriteString(m.textInput.View())
 	content.WriteString("\n")
 
@@ -159,10 +159,10 @@ func (m *AutocompleteModel) View(width, height int) string {
 				style := lipgloss.NewStyle().
 					Foreground(colorAccent).
 					Bold(true)
-				content.WriteString(fmt.Sprintf("  → %s\n", style.Render(suggestion)))
+				fmt.Fprintf(&content, "  → %s\n", style.Render(suggestion))
 			} else {
 				style := lipgloss.NewStyle().Foreground(colorDim)
-				content.WriteString(fmt.Sprintf("    %s\n", style.Render(suggestion)))
+				fmt.Fprintf(&content, "    %s\n", style.Render(suggestion))
 			}
 		}
 
