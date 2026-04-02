@@ -10,6 +10,7 @@ import (
 	"charm.land/bubbles/v2/progress"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+
 	"github.com/mrwhyte/rig/pkg/config"
 	"github.com/mrwhyte/rig/pkg/favorites"
 	"github.com/mrwhyte/rig/pkg/player"
@@ -17,17 +18,19 @@ import (
 	"github.com/mrwhyte/rig/pkg/sponsors"
 )
 
-// ViewMode represents the current view
+// ViewMode represents the current view.
 type ViewMode int
 
+// View mode constants.
 const (
 	ViewLoading ViewMode = iota
 	ViewStationList
 )
 
-// FilterField represents which filter field is being edited
+// FilterField represents which filter field is being edited.
 type FilterField int
 
+// Filter field constants.
 const (
 	FilterNone FilterField = iota
 	FilterCountry
@@ -36,7 +39,7 @@ const (
 	FilterStationName
 )
 
-// Filters represents the current filter state
+// Filters represents the current filter state.
 type Filters struct {
 	Country       string
 	CountryCode   string
@@ -46,7 +49,7 @@ type Filters struct {
 	FavoritesOnly bool
 }
 
-// Model is the main application model
+// Model is the main application model.
 type Model struct {
 	// UI state
 	view   ViewMode
@@ -116,7 +119,7 @@ type Model struct {
 
 }
 
-// NewModel creates a new application model
+// NewModel creates a new application model.
 func NewModel() (*Model, error) {
 	// Create API client
 	apiClient, err := radiobrowser.NewClient()
@@ -175,7 +178,7 @@ func NewModel() (*Model, error) {
 	return m, nil
 }
 
-// Init initializes the model
+// Init initializes the model.
 func (m *Model) Init() tea.Cmd {
 	vol, _ := m.player.GetVolume()
 	return tea.Batch(
@@ -187,7 +190,7 @@ func (m *Model) Init() tea.Cmd {
 	)
 }
 
-// fetchPopularStations fetches popular stations from the API
+// fetchPopularStations fetches popular stations from the API.
 func (m *Model) fetchPopularStations() tea.Cmd {
 	return func() tea.Msg {
 		stations, err := m.apiClient.GetPopularStations(100)
@@ -198,7 +201,7 @@ func (m *Model) fetchPopularStations() tea.Cmd {
 	}
 }
 
-// fetchMetadata fetches countries, tags, and languages
+// fetchMetadata fetches countries, tags, and languages.
 func (m *Model) fetchMetadata() tea.Cmd {
 	return func() tea.Msg {
 		countries, err := m.apiClient.GetCountries()
@@ -220,7 +223,7 @@ func (m *Model) fetchMetadata() tea.Cmd {
 	}
 }
 
-// buildAutocompleteData builds autocomplete suggestions from metadata
+// buildAutocompleteData builds autocomplete suggestions from metadata.
 func (m *Model) buildAutocompleteData() {
 	// Country suggestions
 	countrySugs := make([]string, len(m.countries))
@@ -246,7 +249,7 @@ func (m *Model) buildAutocompleteData() {
 	// Station name suggestions are populated on-demand (not precomputed)
 }
 
-// fetchStationNameSuggestions fetches station name suggestions from the API
+// fetchStationNameSuggestions fetches station name suggestions from the API.
 func (m *Model) fetchStationNameSuggestions(query string) tea.Cmd {
 	return func() tea.Msg {
 		// Use SearchStations with a limit for efficiency (only fetch what we need)
@@ -267,15 +270,15 @@ func (m *Model) fetchStationNameSuggestions(query string) tea.Cmd {
 
 		// Format suggestions as "Station Name (Country)"
 		suggestions := make([]string, len(stations))
-		for i, s := range stations {
-			suggestions[i] = fmt.Sprintf("%s (%s)", s.Name, s.Country)
+		for i := range stations {
+			suggestions[i] = fmt.Sprintf("%s (%s)", stations[i].Name, stations[i].Country)
 		}
 
 		return stationNameSuggestionsMsg{query, suggestions}
 	}
 }
 
-// fetchFilteredStations fetches stations based on current filters
+// fetchFilteredStations fetches stations based on current filters.
 func (m *Model) fetchFilteredStations() tea.Cmd {
 	return func() tea.Msg {
 		// If favorites-only mode, get favorites and filter by other criteria
@@ -304,7 +307,7 @@ func (m *Model) fetchFilteredStations() tea.Cmd {
 	}
 }
 
-// fetchFavoritesFiltered fetches favorites and applies other filters
+// fetchFavoritesFiltered fetches favorites and applies other filters.
 func (m *Model) fetchFavoritesFiltered() tea.Cmd {
 	return func() tea.Msg {
 		// Get all favorite UUIDs
@@ -330,46 +333,46 @@ func (m *Model) fetchFavoritesFiltered() tea.Cmd {
 
 		// Apply other filters client-side
 		filtered := make([]radiobrowser.Station, 0, len(stations))
-		for _, station := range stations {
+		for i := range stations {
 			// Check country filter
-			if m.filters.CountryCode != "" && station.CountryCode != m.filters.CountryCode {
+			if m.filters.CountryCode != "" && stations[i].CountryCode != m.filters.CountryCode {
 				continue
 			}
 
 			// Check genre filter (tags contain genre)
 			if m.filters.Genre != "" {
-				if !strings.Contains(strings.ToLower(station.Tags), strings.ToLower(m.filters.Genre)) {
+				if !strings.Contains(strings.ToLower(stations[i].Tags), strings.ToLower(m.filters.Genre)) {
 					continue
 				}
 			}
 
 			// Check language filter
-			if m.filters.Language != "" && !strings.EqualFold(station.Language, m.filters.Language) {
+			if m.filters.Language != "" && !strings.EqualFold(stations[i].Language, m.filters.Language) {
 				continue
 			}
 
 			// Check station name filter
 			if m.filters.StationName != "" {
-				if !strings.Contains(strings.ToLower(station.Name), strings.ToLower(m.filters.StationName)) {
+				if !strings.Contains(strings.ToLower(stations[i].Name), strings.ToLower(m.filters.StationName)) {
 					continue
 				}
 			}
 
-			filtered = append(filtered, station)
+			filtered = append(filtered, stations[i])
 		}
 
 		return stationsLoadedMsg{stations: filtered}
 	}
 }
 
-// tick returns a command that triggers metadata polling
+// tick returns a command that triggers metadata polling.
 func (m *Model) tick() tea.Cmd {
 	return tea.Tick(10*time.Second, func(time.Time) tea.Msg {
 		return tickMsg{}
 	})
 }
 
-// sleepTimerTick returns a command that triggers timer countdown
+// sleepTimerTick returns a command that triggers timer countdown.
 func (m *Model) sleepTimerTick() tea.Cmd {
 	return tea.Tick(1*time.Second, func(time.Time) tea.Msg {
 		return sleepTimerTickMsg{}
@@ -391,14 +394,14 @@ func (m *Model) sponsorScrollTick() tea.Cmd {
 	})
 }
 
-// waveTick returns a command that advances the sound wave animation frame
+// waveTick returns a command that advances the sound wave animation frame.
 func (m *Model) waveTick() tea.Cmd {
 	return tea.Tick(400*time.Millisecond, func(time.Time) tea.Msg {
 		return waveTickMsg{}
 	})
 }
 
-// pollMetadata queries the player for current metadata
+// pollMetadata queries the player for current metadata.
 func (m *Model) pollMetadata() tea.Cmd {
 	return func() tea.Msg {
 		metadata, err := m.player.GetMetadata()
@@ -414,7 +417,7 @@ func (m *Model) pollMetadata() tea.Cmd {
 	}
 }
 
-// Messages
+// Messages.
 type errMsg struct{ err error }
 type stationsLoadedMsg struct{ stations []radiobrowser.Station }
 type metadataLoadedMsg struct {
@@ -437,20 +440,20 @@ type metadataUpdateMsg struct {
 	actualKbps float64
 }
 
-// Sleep timer messages
+// Sleep timer messages.
 type sleepTimerTickMsg struct{}
 type sleepTimerExpiredMsg struct{}
 type sleepTimerSetMsg struct{ duration time.Duration }
 type sleepTimerCancelledMsg struct{}
 
-// waveTickMsg advances the sound wave animation
+// waveTickMsg advances the sound wave animation.
 type waveTickMsg struct{}
 
-// Sponsor messages
+// Sponsor messages.
 type sponsorsMsg struct{ list []sponsors.Sponsor }
 type sponsorScrollMsg struct{}
 
-// Update handles messages and updates the model
+// Update handles messages and updates the model.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -490,7 +493,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case applyFiltersMsg:
-		return m, m.fetchFilteredStations()
+		cmd := m.fetchFilteredStations()
+		return m, cmd
 
 	case playStationMsg:
 		return m.playStation(msg.station)
@@ -522,7 +526,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			)
 		}
 		// Still tick even if not playing (for responsiveness when playback starts)
-		return m, m.tick()
+		cmd := m.tick()
+		return m, cmd
 
 	case metadataUpdateMsg:
 		m.currentSong = msg.song
@@ -536,7 +541,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.sleepTimerDuration = msg.duration
 		m.sleepTimerRemaining = msg.duration
 		m.sleepTimerStart = time.Now()
-		return m, m.sleepTimerTick()
+		cmd := m.sleepTimerTick()
+		return m, cmd
 
 	case sleepTimerTickMsg:
 		if !m.sleepTimerActive {
@@ -558,7 +564,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Continue ticking
-		return m, m.sleepTimerTick()
+		cmd := m.sleepTimerTick()
+		return m, cmd
 
 	case sleepTimerExpiredMsg:
 		m.sleepTimerActive = false
@@ -574,7 +581,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case sponsorsMsg:
 		m.liveSponsors = msg.list
 		if len(m.liveSponsors) > 1 {
-			return m, m.sponsorScrollTick()
+			cmd := m.sponsorScrollTick()
+			return m, cmd
 		}
 		return m, nil
 
@@ -583,7 +591,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Virtual list length = 2*n (name + dot per sponsor)
 			virtualLen := len(m.liveSponsors) * 2
 			m.sponsorScrollOffset = (m.sponsorScrollOffset + 1) % virtualLen
-			return m, m.sponsorScrollTick()
+			cmd := m.sponsorScrollTick()
+			return m, cmd
 		}
 		return m, nil
 
@@ -595,7 +604,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case waveTickMsg:
 		if m.isPlaying {
 			m.waveFrame++
-			return m, m.waveTick()
+			cmd := m.waveTick()
+			return m, cmd
 		}
 		return m, nil
 
@@ -614,19 +624,20 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// View renders the UI
+// View renders the UI.
 func (m *Model) View() tea.View {
 	var content string
 
-	if !m.ready {
+	switch {
+	case !m.ready:
 		content = "Initializing rig.fm...\n"
-	} else if m.err != nil {
+	case m.err != nil:
 		content = fmt.Sprintf("Error: %v\n\nPress 'q' to quit", m.err)
-	} else if m.showTimerModal {
+	case m.showTimerModal:
 		content = m.renderTimerModal()
-	} else if m.showThemeModal {
+	case m.showThemeModal:
 		content = m.renderThemeModal()
-	} else {
+	default:
 		switch m.view {
 		case ViewLoading:
 			content = "Loading stations...\n"
@@ -644,7 +655,7 @@ func (m *Model) View() tea.View {
 	return v
 }
 
-// handleMouseClick handles mouse click events to switch sections
+// handleMouseClick handles mouse click events to switch sections.
 func (m *Model) handleMouseClick(msg tea.MouseClickMsg) (tea.Model, tea.Cmd) {
 	// Don't process clicks if not ready or not in station list view
 	if !m.ready || m.view != ViewStationList {
@@ -681,7 +692,7 @@ func (m *Model) handleMouseClick(msg tea.MouseClickMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// Close cleans up resources
+// Close cleans up resources.
 func (m *Model) Close() error {
 	if m.player != nil {
 		return m.player.Close()

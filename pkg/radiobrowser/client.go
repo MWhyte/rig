@@ -1,6 +1,7 @@
 package radiobrowser
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,14 +15,14 @@ const (
 	defaultTimeout = 10 * time.Second
 )
 
-// Client is the Radio Browser API client
+// Client is the Radio Browser API client.
 type Client struct {
 	httpClient *http.Client
 	baseURL    string
 	userAgent  string
 }
 
-// NewClient creates a new Radio Browser API client
+// NewClient creates a new Radio Browser API client.
 func NewClient() (*Client, error) {
 	return &Client{
 		httpClient: &http.Client{Timeout: defaultTimeout},
@@ -30,11 +31,14 @@ func NewClient() (*Client, error) {
 	}, nil
 }
 
-// get performs a GET request to the API
+// get performs a GET request to the API.
 func (c *Client) get(endpoint string) ([]byte, error) {
 	url := c.baseURL + endpoint
 
-	req, err := http.NewRequest("GET", url, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +48,7 @@ func (c *Client) get(endpoint string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
@@ -53,7 +57,7 @@ func (c *Client) get(endpoint string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-// unmarshalJSON is a helper to unmarshal JSON responses
+// unmarshalJSON is a helper to unmarshal JSON responses.
 func unmarshalJSON(data []byte, v interface{}) error {
 	if err := json.Unmarshal(data, v); err != nil {
 		return fmt.Errorf("failed to unmarshal JSON: %w", err)

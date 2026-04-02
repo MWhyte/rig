@@ -10,7 +10,7 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-// AutocompleteModel manages autocomplete suggestions for filter inputs
+// AutocompleteModel manages autocomplete suggestions for filter inputs.
 type AutocompleteModel struct {
 	textInput     textinput.Model
 	suggestions   []string // All available suggestions
@@ -20,7 +20,7 @@ type AutocompleteModel struct {
 	fieldName     string   // Name of field being edited (e.g., "Country", "Genre")
 }
 
-// NewAutocompleteModel creates a new autocomplete model
+// NewAutocompleteModel creates a new autocomplete model.
 func NewAutocompleteModel() AutocompleteModel {
 	ti := textinput.New()
 	ti.Placeholder = "" // Empty placeholder to avoid rendering bug
@@ -35,12 +35,12 @@ func NewAutocompleteModel() AutocompleteModel {
 	}
 }
 
-// SetFieldName sets the name of the field being edited
+// SetFieldName sets the name of the field being edited.
 func (m *AutocompleteModel) SetFieldName(name string) {
 	m.fieldName = name
 }
 
-// SetSuggestions updates the available suggestions and resets selection
+// SetSuggestions updates the available suggestions and resets selection.
 func (m *AutocompleteModel) SetSuggestions(suggestions []string) {
 	m.suggestions = suggestions
 	m.filteredSugs = suggestions
@@ -48,7 +48,7 @@ func (m *AutocompleteModel) SetSuggestions(suggestions []string) {
 	m.scrollOffset = 0
 }
 
-// Filter applies fuzzy matching to suggestions based on query
+// Filter applies fuzzy matching to suggestions based on query.
 func (m *AutocompleteModel) Filter(query string) {
 	if query == "" {
 		m.filteredSugs = m.suggestions
@@ -71,7 +71,7 @@ func (m *AutocompleteModel) Filter(query string) {
 	m.scrollOffset = 0
 }
 
-// GetSelected returns the currently selected suggestion, or empty string if none
+// GetSelected returns the currently selected suggestion, or empty string if none.
 func (m *AutocompleteModel) GetSelected() string {
 	if m.selectedIndex >= 0 && m.selectedIndex < len(m.filteredSugs) {
 		return m.filteredSugs[m.selectedIndex]
@@ -79,10 +79,9 @@ func (m *AutocompleteModel) GetSelected() string {
 	return ""
 }
 
-// Update handles keyboard input for navigation
+// Update handles keyboard input for navigation.
 func (m AutocompleteModel) Update(msg tea.Msg) (AutocompleteModel, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	if msg, ok := msg.(tea.KeyMsg); ok {
 		switch msg.String() {
 		case "up", "k":
 			if m.selectedIndex > 0 {
@@ -105,7 +104,7 @@ func (m AutocompleteModel) Update(msg tea.Msg) (AutocompleteModel, tea.Cmd) {
 	return m, nil
 }
 
-// View renders the autocomplete interface
+// View renders the autocomplete interface.
 func (m *AutocompleteModel) View(width, height int) string {
 	var content strings.Builder
 
@@ -184,23 +183,23 @@ func (m *AutocompleteModel) View(width, height int) string {
 	return content.String()
 }
 
-// Focus focuses the text input
+// Focus focuses the text input.
 func (m *AutocompleteModel) Focus() tea.Cmd {
 	return m.textInput.Focus()
 }
 
-// Blur blurs the text input
+// Blur blurs the text input.
 func (m *AutocompleteModel) Blur() {
 	m.textInput.Blur()
 }
 
-// SetValue sets the text input value and resets cursor position
+// SetValue sets the text input value and resets cursor position.
 func (m *AutocompleteModel) SetValue(value string) {
 	m.textInput.SetValue(value)
 	m.textInput.SetCursor(len(value)) // Move cursor to end
 }
 
-// Reset creates a fresh textinput with the given initial value
+// Reset creates a fresh textinput with the given initial value.
 func (m *AutocompleteModel) Reset(initialValue string) {
 	// Create a completely new textinput to avoid cursor/state issues
 	ti := textinput.New()
@@ -211,12 +210,12 @@ func (m *AutocompleteModel) Reset(initialValue string) {
 	m.textInput = ti
 }
 
-// Value returns the current text input value
+// Value returns the current text input value.
 func (m *AutocompleteModel) Value() string {
 	return m.textInput.Value()
 }
 
-// UpdateTextInput updates the text input component
+// UpdateTextInput updates the text input component.
 func (m AutocompleteModel) UpdateTextInput(msg tea.Msg) (AutocompleteModel, tea.Cmd) {
 	var cmd tea.Cmd
 	m.textInput, cmd = m.textInput.Update(msg)

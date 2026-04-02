@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// FavoriteStation represents a favorited station
+// FavoriteStation represents a favorited station.
 type FavoriteStation struct {
 	StationUUID string    `json:"stationuuid"`
 	Name        string    `json:"name"`
@@ -15,13 +15,13 @@ type FavoriteStation struct {
 	AddedAt     time.Time `json:"added_at"`
 }
 
-// Manager handles favorites persistence
+// Manager handles favorites persistence.
 type Manager struct {
 	filePath string
 	stations map[string]FavoriteStation // Map by UUID for fast lookup
 }
 
-// NewManager creates a favorites manager
+// NewManager creates a favorites manager.
 func NewManager() (*Manager, error) {
 	// Get config dir: ~/.config/rig/
 	configDir, err := os.UserConfigDir()
@@ -32,7 +32,7 @@ func NewManager() (*Manager, error) {
 	rigDir := filepath.Join(configDir, "rig")
 
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(rigDir, 0755); err != nil {
+	if err := os.MkdirAll(rigDir, 0o750); err != nil {
 		return nil, err
 	}
 
@@ -51,13 +51,13 @@ func NewManager() (*Manager, error) {
 	return m, nil
 }
 
-// IsFavorite checks if a station is favorited
+// IsFavorite checks if a station is favorited.
 func (m *Manager) IsFavorite(stationUUID string) bool {
 	_, exists := m.stations[stationUUID]
 	return exists
 }
 
-// Toggle adds or removes a station from favorites
+// Toggle adds or removes a station from favorites.
 func (m *Manager) Toggle(stationUUID, name, urlResolved string) error {
 	if m.IsFavorite(stationUUID) {
 		delete(m.stations, stationUUID)
@@ -73,7 +73,7 @@ func (m *Manager) Toggle(stationUUID, name, urlResolved string) error {
 	return m.Save()
 }
 
-// GetAll returns all favorite stations
+// GetAll returns all favorite stations.
 func (m *Manager) GetAll() []FavoriteStation {
 	favs := make([]FavoriteStation, 0, len(m.stations))
 	for _, station := range m.stations {
@@ -82,7 +82,7 @@ func (m *Manager) GetAll() []FavoriteStation {
 	return favs
 }
 
-// Load reads favorites from disk
+// Load reads favorites from disk.
 func (m *Manager) Load() error {
 	data, err := os.ReadFile(m.filePath)
 	if err != nil {
@@ -106,7 +106,7 @@ func (m *Manager) Load() error {
 	return nil
 }
 
-// Save writes favorites to disk
+// Save writes favorites to disk.
 func (m *Manager) Save() error {
 	// Convert map to slice for JSON
 	stations := make([]FavoriteStation, 0, len(m.stations))
@@ -125,5 +125,5 @@ func (m *Manager) Save() error {
 		return err
 	}
 
-	return os.WriteFile(m.filePath, jsonData, 0644)
+	return os.WriteFile(m.filePath, jsonData, 0o600)
 }

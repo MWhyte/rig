@@ -1,6 +1,7 @@
 package sponsors
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -54,12 +55,20 @@ func Load() ([]Sponsor, error) {
 }
 
 func fetch() (*SponsorList, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(gistURL)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, gistURL, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
@@ -85,7 +94,7 @@ func readCache() (*SponsorList, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // path is derived from os.UserConfigDir, not user input
 	if err != nil {
 		return nil, err
 	}
@@ -101,12 +110,12 @@ func writeCache(list *SponsorList) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return err
 	}
 	data, err := json.Marshal(list)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0o644)
+	return os.WriteFile(path, data, 0o600)
 }

@@ -23,7 +23,7 @@ func activePanelTitleStyle() lipgloss.Style {
 	return lipgloss.NewStyle().Bold(true).Foreground(colorAccent).Padding(0, 1)
 }
 
-// renderMultiPanelLayout renders the main multi-panel layout
+// renderMultiPanelLayout renders the main multi-panel layout.
 func (m *Model) renderMultiPanelLayout() string {
 	// Calculate dimensions
 	// Left column (70% width): Filters + Station List
@@ -66,13 +66,13 @@ func (m *Model) renderMultiPanelLayout() string {
 	)
 }
 
-// renderHeader renders the app header
+// renderHeader renders the app header.
 func (m *Model) renderHeader() string {
 	title := titleStyle.Render(" rig.fm - Terminal Radio")
 	return title
 }
 
-// renderFooter renders the help footer
+// renderFooter renders the help footer.
 func (m *Model) renderFooter() string {
 	// If editing a filter, show different help
 	if m.editingFilter != FilterNone {
@@ -97,7 +97,7 @@ func (m *Model) renderFooter() string {
 	return "\n" + helpStyle.Render(help)
 }
 
-// renderStationListPanel renders the station list panel
+// renderStationListPanel renders the station list panel.
 func (m *Model) renderStationListPanel(width, height int) string {
 	// width-2 for border side chars, height-3 for border top/bottom + title line
 	m.stationList.SetSize(width-2, height-3)
@@ -125,7 +125,7 @@ func (m *Model) renderStationListPanel(width, height int) string {
 		Render(panel)
 }
 
-// waveFrames is a looping ASCII waveform animation (8 chars wide)
+// waveFrames is a looping ASCII waveform animation (8 chars wide).
 var waveFrames = []string{
 	"▁▂▃▂▁▁▂▃",
 	"▂▃▂▁▁▂▃▂",
@@ -146,7 +146,7 @@ func truncateLines(s string, n int) string {
 	return strings.Join(lines[:n], "\n")
 }
 
-// truncate cuts s to maxLen, appending "..." if needed
+// truncate cuts s to maxLen, appending "..." if needed.
 func truncate(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
@@ -157,7 +157,7 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
-// renderPlayerPanel renders the player panel
+// renderPlayerPanel renders the player panel.
 func (m *Model) renderPlayerPanel(width, height int) string {
 	borderStyle := inactiveBorderStyle()
 	titleStyle := panelTitleStyle()
@@ -221,7 +221,7 @@ func (m *Model) renderPlayerPanel(width, height int) string {
 		timerText := fmt.Sprintf("  ⏱ %d:%02d", minutes, seconds)
 		if minutes >= 60 {
 			hours := minutes / 60
-			minutes = minutes % 60
+			minutes %= 60
 			timerText = fmt.Sprintf("  ⏱ %d:%02d:%02d", hours, minutes, seconds)
 		}
 		info.WriteString(lipgloss.NewStyle().Foreground(colorAccent).Render(timerText))
@@ -259,7 +259,7 @@ func (m *Model) renderPlayerPanel(width, height int) string {
 	return borderStyle.Width(width).Height(height).Render(panel)
 }
 
-// renderFiltersPanel renders the filters panel
+// renderFiltersPanel renders the filters panel.
 func (m *Model) renderFiltersPanel(width, height int) string {
 	borderStyle := inactiveBorderStyle()
 	titleStyle := panelTitleStyle()
@@ -288,7 +288,7 @@ func (m *Model) renderFiltersPanel(width, height int) string {
 		Render(panel)
 }
 
-// renderFilterList renders the normal filter list view
+// renderFilterList renders the normal filter list view.
 func (m *Model) renderFilterList() string {
 	var content strings.Builder
 
@@ -376,13 +376,13 @@ func (m *Model) renderThemeModal() string {
 	var content strings.Builder
 	content.WriteString("\n")
 
-	for i, t := range themes {
+	for i := range themes {
 		if i == m.themeModalIndex {
 			content.WriteString(lipgloss.NewStyle().Foreground(colorAccent).Bold(true).
-				Render(fmt.Sprintf("  → %s", t.Name)))
+				Render(fmt.Sprintf("  → %s", themes[i].Name)))
 		} else {
 			content.WriteString(lipgloss.NewStyle().Foreground(colorMuted).
-				Render(fmt.Sprintf("    %s", t.Name)))
+				Render(fmt.Sprintf("    %s", themes[i].Name)))
 		}
 		content.WriteString("\n")
 	}
@@ -404,7 +404,7 @@ func (m *Model) renderThemeModal() string {
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
 }
 
-// renderTimerModal renders the sleep timer configuration modal
+// renderTimerModal renders the sleep timer configuration modal.
 func (m *Model) renderTimerModal() string {
 	// Modal dimensions
 	modalWidth := 50

@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Running pre-commit checks..."
+
+# Check gofmt
+unformatted=$(gofmt -l . 2>/dev/null || true)
+if [ -n "$unformatted" ]; then
+    echo "FAIL: The following files are not formatted:"
+    echo "$unformatted"
+    echo ""
+    echo "Run 'gofmt -w .' to fix."
+    exit 1
+fi
+echo "  gofmt: ok"
+
+# Check goimports (if installed)
+if command -v goimports &>/dev/null; then
+    bad_imports=$(goimports -l . 2>/dev/null || true)
+    if [ -n "$bad_imports" ]; then
+        echo "FAIL: The following files have incorrect imports:"
+        echo "$bad_imports"
+        echo ""
+        echo "Run 'goimports -w .' to fix."
+        exit 1
+    fi
+    echo "  goimports: ok"
+fi
+
+# Run go vet
+if ! go vet ./... 2>&1; then
+    echo "FAIL: go vet found issues."
+    exit 1
+fi
+echo "  go vet: ok"
+
+# Run golangci-lint (if installed)
+if command -v golangci-lint &>/dev/null; then
+    if ! golangci-lint run ./... 2>&1; then
+        echo "FAIL: golangci-lint found issues."
+        exit 1
+    fi
+    echo "  golangci-lint: ok"
+else
+    echo "  golangci-lint: skipped (not installed)"
+    echo "  Install: https://golangci-lint.run/welcome/install/"
+fi
+
+echo "All pre-commit checks passed."

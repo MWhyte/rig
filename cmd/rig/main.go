@@ -5,6 +5,7 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
+
 	"github.com/mrwhyte/rig/pkg/ui"
 )
 
@@ -27,6 +28,5 @@ func main() {
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error running program: %v\n", err)
-		os.Exit(1)
 	}
 }

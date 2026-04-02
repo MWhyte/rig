@@ -74,6 +74,17 @@ Open an issue with:
 - Keep functions small and focused
 - Prefer clear names over comments
 
+## Releasing (maintainers only)
+
+Releases are automated via [GoReleaser](https://goreleaser.com/). To create a new release:
+
+1. Tag the commit:
+   ```bash
+   git tag v0.x.x
+   git push --tags
+   ```
+2. The GitHub Actions workflow builds binaries for macOS and Linux, creates a GitHub release, and updates the Homebrew formula automatically.
+
 ## Questions?
 
 Open an issue or start a discussion. We're happy to help.

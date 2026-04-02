@@ -17,7 +17,7 @@ func configPath() (string, error) {
 		return "", err
 	}
 	rigDir := filepath.Join(dir, "rig")
-	if err := os.MkdirAll(rigDir, 0755); err != nil {
+	if err := os.MkdirAll(rigDir, 0o750); err != nil {
 		return "", err
 	}
 	return filepath.Join(rigDir, "config.json"), nil
@@ -30,7 +30,7 @@ func Load() (*Config, error) {
 		return &Config{}, err
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // path is derived from os.UserConfigDir, not user input
 	if os.IsNotExist(err) {
 		return &Config{}, nil
 	}
@@ -56,5 +56,5 @@ func Save(cfg *Config) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0o600)
 }

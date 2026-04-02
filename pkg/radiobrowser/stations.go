@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// SearchStations performs an advanced search with multiple filter criteria
+// SearchStations performs an advanced search with multiple filter criteria.
 func (c *Client) SearchStations(params SearchParams) ([]Station, error) {
 	endpoint := "/json/stations/search"
 
@@ -67,7 +67,7 @@ func (c *Client) SearchStations(params SearchParams) ([]Station, error) {
 	return stations, nil
 }
 
-// SearchByName searches for stations by name
+// SearchByName searches for stations by name.
 func (c *Client) SearchByName(name string) ([]Station, error) {
 	endpoint := fmt.Sprintf("/json/stations/byname/%s", url.PathEscape(name))
 
@@ -84,7 +84,7 @@ func (c *Client) SearchByName(name string) ([]Station, error) {
 	return stations, nil
 }
 
-// SearchByCountry searches for stations by country
+// SearchByCountry searches for stations by country.
 func (c *Client) SearchByCountry(country string) ([]Station, error) {
 	endpoint := fmt.Sprintf("/json/stations/bycountry/%s", url.PathEscape(country))
 
@@ -101,7 +101,7 @@ func (c *Client) SearchByCountry(country string) ([]Station, error) {
 	return stations, nil
 }
 
-// SearchByTag searches for stations by tag/genre
+// SearchByTag searches for stations by tag/genre.
 func (c *Client) SearchByTag(tag string) ([]Station, error) {
 	endpoint := fmt.Sprintf("/json/stations/bytag/%s", url.PathEscape(tag))
 
@@ -118,7 +118,7 @@ func (c *Client) SearchByTag(tag string) ([]Station, error) {
 	return stations, nil
 }
 
-// SearchByLanguage searches for stations by language
+// SearchByLanguage searches for stations by language.
 func (c *Client) SearchByLanguage(language string) ([]Station, error) {
 	endpoint := fmt.Sprintf("/json/stations/bylanguage/%s", url.PathEscape(language))
 
@@ -135,7 +135,7 @@ func (c *Client) SearchByLanguage(language string) ([]Station, error) {
 	return stations, nil
 }
 
-// GetStationByUUID retrieves a specific station by its UUID
+// GetStationByUUID retrieves a specific station by its UUID.
 func (c *Client) GetStationByUUID(uuid string) (*Station, error) {
 	endpoint := fmt.Sprintf("/json/stations/byuuid/%s", url.PathEscape(uuid))
 
@@ -156,7 +156,7 @@ func (c *Client) GetStationByUUID(uuid string) (*Station, error) {
 	return &stations[0], nil
 }
 
-// SearchByUUIDs searches for stations by their UUIDs
+// SearchByUUIDs searches for stations by their UUIDs.
 func (c *Client) SearchByUUIDs(uuids []string) ([]Station, error) {
 	if len(uuids) == 0 {
 		return []Station{}, nil
@@ -178,7 +178,7 @@ func (c *Client) SearchByUUIDs(uuids []string) ([]Station, error) {
 	return stations, nil
 }
 
-// GetTopStations retrieves the top stations by vote count
+// GetTopStations retrieves the top stations by vote count.
 func (c *Client) GetTopStations(limit int) ([]Station, error) {
 	params := SearchParams{
 		Order:      "votes",
@@ -190,7 +190,7 @@ func (c *Client) GetTopStations(limit int) ([]Station, error) {
 	return c.SearchStations(params)
 }
 
-// GetPopularStations retrieves popular stations by click count
+// GetPopularStations retrieves popular stations by click count.
 func (c *Client) GetPopularStations(limit int) ([]Station, error) {
 	params := SearchParams{
 		Order:      "clickcount",
@@ -202,7 +202,7 @@ func (c *Client) GetPopularStations(limit int) ([]Station, error) {
 	return c.SearchStations(params)
 }
 
-// GetCountries retrieves all countries with station counts
+// GetCountries retrieves all countries with station counts.
 func (c *Client) GetCountries() ([]Country, error) {
 	endpoint := "/json/countries"
 
@@ -219,7 +219,7 @@ func (c *Client) GetCountries() ([]Country, error) {
 	return countries, nil
 }
 
-// GetLanguages retrieves all languages with station counts
+// GetLanguages retrieves all languages with station counts.
 func (c *Client) GetLanguages() ([]Language, error) {
 	endpoint := "/json/languages"
 
@@ -236,7 +236,7 @@ func (c *Client) GetLanguages() ([]Language, error) {
 	return languages, nil
 }
 
-// GetTags retrieves all tags/genres with station counts
+// GetTags retrieves all tags/genres with station counts.
 func (c *Client) GetTags() ([]Tag, error) {
 	endpoint := "/json/tags"
 
@@ -253,7 +253,7 @@ func (c *Client) GetTags() ([]Tag, error) {
 	return tags, nil
 }
 
-// GetCodecs retrieves all codecs with station counts
+// GetCodecs retrieves all codecs with station counts.
 func (c *Client) GetCodecs() ([]Codec, error) {
 	endpoint := "/json/codecs"
 

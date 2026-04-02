@@ -2,6 +2,7 @@ package player
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,23 +14,24 @@ import (
 	"time"
 )
 
-// State represents the current player state
+// State represents the current player state.
 type State int
 
+// Player state constants.
 const (
 	StateStopped State = iota
 	StatePlaying
 	StatePaused
 )
 
-// MPVResponse represents a response from MPV IPC
+// MPVResponse represents a response from MPV IPC.
 type MPVResponse struct {
 	RequestID *int        `json:"request_id"`
 	Data      interface{} `json:"data"`
 	Error     string      `json:"error"`
 }
 
-// Metadata represents stream metadata
+// Metadata represents stream metadata.
 type Metadata struct {
 	Title      string  // Current song (ICY title)
 	Genre      string  // ICY genre
@@ -37,7 +39,7 @@ type Metadata struct {
 	ActualKbps float64 // Actual decoded audio bitrate in kbps
 }
 
-// Player interface defines the audio player operations
+// Player interface defines the audio player operations.
 type Player interface {
 	Play(url string) error
 	Pause() error
@@ -51,7 +53,7 @@ type Player interface {
 	Close() error
 }
 
-// MPVPlayer is an mpv-based audio player
+// MPVPlayer is an mpv-based audio player.
 type MPVPlayer struct {
 	cmd        *exec.Cmd
 	stdout     io.ReadCloser
@@ -62,7 +64,7 @@ type MPVPlayer struct {
 	mu         sync.RWMutex
 }
 
-// NewMPVPlayer creates a new mpv-based player
+// NewMPVPlayer creates a new mpv-based player.
 func NewMPVPlayer() (*MPVPlayer, error) {
 	// Check if mpv is available
 	if _, err := exec.LookPath("mpv"); err != nil {
@@ -79,7 +81,7 @@ func NewMPVPlayer() (*MPVPlayer, error) {
 	}, nil
 }
 
-// Play starts playing the given URL
+// Play starts playing the given URL.
 func (p *MPVPlayer) Play(url string) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -89,8 +91,9 @@ func (p *MPVPlayer) Play(url string) error {
 		p.stopLocked()
 	}
 
-	// Start mpv with IPC server and battery optimization flags
-	p.cmd = exec.Command("mpv",
+	// Start mpv with IPC server and battery optimization flags.
+	//nolint:gosec // mpv args are constructed from trusted internal values
+	p.cmd = exec.CommandContext(context.Background(), "mpv",
 		"--no-video",                            // Audio only
 		"--no-terminal",                         // Don't take over terminal
 		"--input-ipc-server="+p.socketPath,      // IPC socket for control
@@ -134,7 +137,7 @@ func (p *MPVPlayer) Play(url string) error {
 	return nil
 }
 
-// Pause pauses playback
+// Pause pauses playback.
 func (p *MPVPlayer) Pause() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -153,7 +156,7 @@ func (p *MPVPlayer) Pause() error {
 	return nil
 }
 
-// Resume resumes playback
+// Resume resumes playback.
 func (p *MPVPlayer) Resume() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -172,18 +175,19 @@ func (p *MPVPlayer) Resume() error {
 	return nil
 }
 
-// Stop stops playback
+// Stop stops playback.
 func (p *MPVPlayer) Stop() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	return p.stopLocked()
+	p.stopLocked()
+	return nil
 }
 
-// stopLocked stops playback (must be called with lock held)
-func (p *MPVPlayer) stopLocked() error {
+// stopLocked stops playback (must be called with lock held).
+func (p *MPVPlayer) stopLocked() {
 	if p.cmd == nil || p.state == StateStopped {
-		return nil
+		return
 	}
 
 	// Send quit command
@@ -205,11 +209,9 @@ func (p *MPVPlayer) stopLocked() error {
 
 	// Clean up socket
 	_ = os.Remove(p.socketPath)
-
-	return nil
 }
 
-// SetVolume sets the volume (0-100)
+// SetVolume sets the volume (0-100).
 func (p *MPVPlayer) SetVolume(volume int) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -231,7 +233,7 @@ func (p *MPVPlayer) SetVolume(volume int) error {
 	return nil
 }
 
-// GetVolume returns the current volume
+// GetVolume returns the current volume.
 func (p *MPVPlayer) GetVolume() (int, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -239,7 +241,7 @@ func (p *MPVPlayer) GetVolume() (int, error) {
 	return p.volume, nil
 }
 
-// GetState returns the current player state
+// GetState returns the current player state.
 func (p *MPVPlayer) GetState() State {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -247,7 +249,7 @@ func (p *MPVPlayer) GetState() State {
 	return p.state
 }
 
-// IsPlaying returns true if currently playing
+// IsPlaying returns true if currently playing.
 func (p *MPVPlayer) IsPlaying() bool {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -255,12 +257,12 @@ func (p *MPVPlayer) IsPlaying() bool {
 	return p.state == StatePlaying
 }
 
-// Close closes the player and cleans up resources
+// Close closes the player and cleans up resources.
 func (p *MPVPlayer) Close() error {
 	return p.Stop()
 }
 
-// connectWithRetry connects to the MPV socket with retry logic
+// connectWithRetry connects to the MPV socket with retry logic.
 func (p *MPVPlayer) connectWithRetry() (net.Conn, error) {
 	if p.socketPath == "" {
 		return nil, fmt.Errorf("no socket path")
@@ -270,8 +272,9 @@ func (p *MPVPlayer) connectWithRetry() (net.Conn, error) {
 	var conn net.Conn
 	var err error
 
+	dialer := &net.Dialer{Timeout: 2 * time.Second}
 	for i := 0; i < maxRetries; i++ {
-		conn, err = net.Dial("unix", p.socketPath)
+		conn, err = dialer.Dial("unix", p.socketPath)
 		if err == nil {
 			return conn, nil
 		}
@@ -281,16 +284,16 @@ func (p *MPVPlayer) connectWithRetry() (net.Conn, error) {
 	return nil, fmt.Errorf("failed to connect to mpv socket after retries: %w", err)
 }
 
-// sendCommand sends a JSON command to mpv via IPC socket
+// sendCommand sends a JSON command to mpv via IPC socket.
 func (p *MPVPlayer) sendCommand(cmd map[string]interface{}) error {
 	conn, err := p.connectWithRetry()
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Set write deadline
-	conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 
 	// Encode and send command
 	encoder := json.NewEncoder(conn)
@@ -301,16 +304,16 @@ func (p *MPVPlayer) sendCommand(cmd map[string]interface{}) error {
 	return nil
 }
 
-// getProperty queries an MPV property and returns the response
+// getProperty queries an MPV property and returns the response.
 func (p *MPVPlayer) getProperty(property string) (interface{}, error) {
 	conn, err := p.connectWithRetry()
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Set read/write deadlines
-	conn.SetDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetDeadline(time.Now().Add(2 * time.Second))
 
 	// Send command
 	cmd := map[string]interface{}{
@@ -336,7 +339,7 @@ func (p *MPVPlayer) getProperty(property string) (interface{}, error) {
 	return response.Data, nil
 }
 
-// GetMetadata retrieves current playback metadata
+// GetMetadata retrieves current playback metadata.
 func (p *MPVPlayer) GetMetadata() (*Metadata, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()

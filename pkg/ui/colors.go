@@ -112,8 +112,8 @@ func setTheme(index int) {
 
 // themeIndexByName returns the index of a theme by name, or 0 if not found.
 func themeIndexByName(name string) int {
-	for i, t := range themes {
-		if t.Name == name {
+	for i := range themes {
+		if themes[i].Name == name {
 			return i
 		}
 	}

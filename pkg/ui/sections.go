@@ -1,20 +1,21 @@
 package ui
 
-// Section represents a UI section/panel
+// Section represents a UI section/panel.
 type Section int
 
+// UI section constants.
 const (
 	SectionStationList Section = iota
 	SectionFilters
 )
 
-// sectionNames maps sections to their display names
+// sectionNames maps sections to their display names.
 var sectionNames = map[Section]string{
 	SectionStationList: "Station List",
 	SectionFilters:     "Filters",
 }
 
-// nextSection returns the next section in the cycle
+// nextSection returns the next section in the cycle.
 func (s Section) next() Section {
 	switch s {
 	case SectionStationList:
@@ -26,7 +27,7 @@ func (s Section) next() Section {
 	}
 }
 
-// prevSection returns the previous section in the cycle
+// prevSection returns the previous section in the cycle.
 func (s Section) prev() Section {
 	switch s {
 	case SectionStationList:
@@ -38,7 +39,7 @@ func (s Section) prev() Section {
 	}
 }
 
-// String returns the section name
+// String returns the section name.
 func (s Section) String() string {
 	if name, ok := sectionNames[s]; ok {
 		return name

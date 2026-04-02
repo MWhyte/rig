@@ -42,7 +42,7 @@ rig.fm requires [mpv](https://mpv.io/) for audio playback. Homebrew installs it 
 ### Homebrew (macOS and Linux)
 
 ```bash
-brew install mrwhyte/tap/rig
+brew install mwhyte/tap/rig
 ```
 
 ### Download binary

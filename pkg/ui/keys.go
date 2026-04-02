@@ -12,7 +12,15 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-// handleKeyPress handles keyboard input
+// Key string constants shared across handlers.
+const (
+	keyDown  = "down"
+	keyCtrlC = "ctrl+c"
+	keyEnter = "enter"
+	keyEsc   = "esc"
+)
+
+// handleKeyPress handles keyboard input.
 func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if m.showThemeModal {
 		return m.handleThemeModalInput(msg)
@@ -30,7 +38,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 	// If station list is filtering, pass keys to it first (except ctrl+c)
 	if m.ready && m.focusedSection == SectionStationList && m.stationList.FilterState() == list.Filtering {
-		if msg.String() != "ctrl+c" {
+		if msg.String() != keyCtrlC {
 			var cmd tea.Cmd
 			m.stationList, cmd = m.stationList.Update(msg)
 			return m, cmd
@@ -39,7 +47,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 	// Global shortcuts (work in any section)
 	switch msg.String() {
-	case "ctrl+c":
+	case keyCtrlC:
 		m.stopPlayback()
 		return m, tea.Quit
 
@@ -55,7 +63,8 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 	case "space":
 		// Toggle play/pause, or play selected station
-		if m.isPlaying && m.playing != nil {
+		switch {
+		case m.isPlaying && m.playing != nil:
 			// Currently playing - pause it
 			if err := m.player.Pause(); err == nil {
 				m.isPlaying = false
@@ -66,7 +75,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 				}
 			}
 			return m, nil
-		} else if !m.isPlaying && m.playing != nil {
+		case !m.isPlaying && m.playing != nil:
 			// Paused - resume it
 			if err := m.player.Resume(); err == nil {
 				m.isPlaying = true
@@ -74,12 +83,15 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 					m.sleepTimerPaused = false
 					m.sleepTimerDuration = m.sleepTimerRemaining
 					m.sleepTimerStart = time.Now()
-					return m, tea.Batch(m.waveTick(), m.sleepTimerTick())
+					waveCmd := m.waveTick()
+					sleepCmd := m.sleepTimerTick()
+					return m, tea.Batch(waveCmd, sleepCmd)
 				}
-				return m, m.waveTick()
+				cmd := m.waveTick()
+				return m, cmd
 			}
 			return m, nil
-		} else if m.focusedSection == SectionStationList && len(m.stations) > 0 {
+		case m.focusedSection == SectionStationList && len(m.stations) > 0:
 			// No station playing and in station list - play selected station
 			// Get the actual selected item from the filtered list
 			if item := m.stationList.SelectedItem(); item != nil {
@@ -167,10 +179,9 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handleStationListKeys handles keys when station list is focused
+// handleStationListKeys handles keys when station list is focused.
 func (m *Model) handleStationListKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "enter":
+	if msg.String() == keyEnter {
 		// Play selected station
 		if m.view == ViewStationList && len(m.stations) > 0 {
 			// Get the actual selected item from the filtered list
@@ -190,7 +201,7 @@ func (m *Model) handleStationListKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 	return m, cmd
 }
 
-// handleFiltersKeys handles keys when filters section is focused
+// handleFiltersKeys handles keys when filters section is focused.
 func (m *Model) handleFiltersKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "up", "k":
@@ -200,14 +211,14 @@ func (m *Model) handleFiltersKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case "down", "j":
+	case keyDown, "j":
 		// Navigate down through filters
 		if m.selectedFilterIndex < 4 { // 0-4 = 5 filter options
 			m.selectedFilterIndex++
 		}
 		return m, nil
 
-	case "enter":
+	case keyEnter:
 		// Activate the selected filter
 		switch m.selectedFilterIndex {
 		case 0:
@@ -256,7 +267,8 @@ func (m *Model) handleFiltersKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 				m.filters.Genre == "" &&
 				m.filters.Language == "" &&
 				m.filters.StationName == "" {
-				return m, m.fetchPopularStations()
+				cmd := m.fetchPopularStations()
+				return m, cmd
 			}
 
 			return m, func() tea.Msg {
@@ -269,7 +281,8 @@ func (m *Model) handleFiltersKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		// Clear all filters and return to popular stations
 		m.filters = Filters{}
 		m.editingFilter = FilterNone
-		return m, m.fetchPopularStations()
+		cmd := m.fetchPopularStations()
+		return m, cmd
 
 	case "1":
 		// Edit country filter
@@ -318,7 +331,8 @@ func (m *Model) handleFiltersKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.filters.Genre == "" &&
 			m.filters.Language == "" &&
 			m.filters.StationName == "" {
-			return m, m.fetchPopularStations()
+			cmd := m.fetchPopularStations()
+			return m, cmd
 		}
 
 		return m, func() tea.Msg {
@@ -329,21 +343,21 @@ func (m *Model) handleFiltersKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handleFilterInput handles keyboard input when editing a filter
+// handleFilterInput handles keyboard input when editing a filter.
 func (m *Model) handleFilterInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "ctrl+c":
+	case keyCtrlC:
 		// Allow quitting even during input
 		m.stopPlayback()
 		return m, tea.Quit
 
-	case "esc":
+	case keyEsc:
 		// Cancel editing
 		m.editingFilter = FilterNone
 		m.autocomplete.Blur()
 		return m, nil
 
-	case "enter":
+	case keyEnter:
 		// Use selected suggestion or typed value
 		selected := m.autocomplete.GetSelected()
 		value := ""
@@ -369,7 +383,7 @@ func (m *Model) handleFilterInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return applyFiltersMsg{}
 		}
 
-	case "up", "down":
+	case "up", keyDown:
 		// Navigate autocomplete suggestions (only arrow keys, so j/k can be typed)
 		var cmd tea.Cmd
 		m.autocomplete, cmd = m.autocomplete.Update(msg)
@@ -392,7 +406,7 @@ func (m *Model) handleFilterInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-// extractFilterValue extracts the actual value from "Name (count)" format
+// extractFilterValue extracts the actual value from "Name (count)" format.
 func extractFilterValue(suggestion string) string {
 	// Find the last opening parenthesis
 	lastParen := -1
@@ -411,7 +425,7 @@ func extractFilterValue(suggestion string) string {
 	return suggestion
 }
 
-// applyFilterValue applies a filter value to the appropriate filter field
+// applyFilterValue applies a filter value to the appropriate filter field.
 func (m *Model) applyFilterValue(value string) {
 	switch m.editingFilter {
 	case FilterCountry:
@@ -420,7 +434,7 @@ func (m *Model) applyFilterValue(value string) {
 		m.filters.CountryCode = ""
 		for _, country := range m.countries {
 			if country.Name == value {
-				m.filters.CountryCode = country.ISO3166_1
+				m.filters.CountryCode = country.ISO31661
 				break
 			}
 		}
@@ -430,12 +444,17 @@ func (m *Model) applyFilterValue(value string) {
 		m.filters.Language = value
 	case FilterStationName:
 		m.filters.StationName = value
+	case FilterNone:
+		// Nothing to apply.
 	}
 }
 
-// updateAutocompleteSuggestions updates autocomplete suggestions based on query
+// updateAutocompleteSuggestions updates autocomplete suggestions based on query.
 func (m *Model) updateAutocompleteSuggestions(query string) tea.Cmd {
 	switch m.editingFilter {
+	case FilterNone:
+		return nil
+
 	case FilterCountry, FilterGenre, FilterLanguage:
 		// Use precomputed metadata with fuzzy filtering
 		m.autocomplete.Filter(query)
@@ -457,7 +476,7 @@ func (m *Model) updateAutocompleteSuggestions(query string) tea.Cmd {
 
 		// Trigger debounced search
 		// Return a command that waits 300ms then fetches suggestions
-		return tea.Tick(300*time.Millisecond, func(t time.Time) tea.Msg {
+		return tea.Tick(300*time.Millisecond, func(_ time.Time) tea.Msg {
 			return m.fetchStationNameSuggestions(query)()
 		})
 	}
@@ -465,16 +484,7 @@ func (m *Model) updateAutocompleteSuggestions(query string) tea.Cmd {
 	return nil
 }
 
-// hasActiveFilters returns true if any filters are active
-func (m *Model) hasActiveFilters() bool {
-	return m.filters.CountryCode != "" ||
-		m.filters.Genre != "" ||
-		m.filters.Language != "" ||
-		m.filters.StationName != "" ||
-		m.filters.FavoritesOnly
-}
-
-// handleTimerModalInput handles keyboard input in the timer modal
+// handleTimerModalInput handles keyboard input in the timer modal.
 func (m *Model) handleTimerModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// Check for Enter key first (before textinput consumes it)
 	if msg.Code == tea.KeyEnter {
@@ -506,12 +516,12 @@ func (m *Model) handleTimerModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 	}
 
 	switch msg.String() {
-	case "ctrl+c":
+	case keyCtrlC:
 		// Allow quitting even during timer modal
 		m.stopPlayback()
 		return m, tea.Quit
 
-	case "esc":
+	case keyEsc:
 		// Close modal without changes
 		m.showTimerModal = false
 		m.timerInput.Blur()
@@ -547,19 +557,19 @@ func (m *Model) handleThemeModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 		m.applyTheme(m.themeModalIndex)
 		return m, nil
 
-	case "down", "j":
+	case keyDown, "j":
 		m.themeModalIndex = min(m.themeModalIndex+1, len(themes)-1)
 		m.applyTheme(m.themeModalIndex)
 		return m, nil
 
-	case "enter":
-		// Confirm — save to config
+	case keyEnter:
+		// Confirm, save to config
 		m.showThemeModal = false
 		cfg := &config.Config{Theme: themes[themeIndex].Name}
 		_ = config.Save(cfg)
 		return m, nil
 
-	case "esc":
+	case keyEsc:
 		// Revert to original theme
 		m.applyTheme(m.originalThemeIndex)
 		m.showThemeModal = false

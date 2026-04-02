@@ -1,0 +1,105 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    # Default linters
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+
+    # Code quality
+    - bodyclose
+    - copyloopvar
+    - dupl
+    - errname
+    - exhaustive
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - gosec
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - prealloc
+    - predeclared
+    - revive
+    - unconvert
+    - unparam
+    - whitespace
+
+  settings:
+    gocyclo:
+      min-complexity: 40
+
+    dupl:
+      threshold: 150
+
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+
+    nestif:
+      min-complexity: 11
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+      disabled-checks:
+        - hugeParam
+
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+        - name: increment-decrement
+        - name: var-naming
+        - name: package-comments
+          disabled: true
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unused-parameter
+        - name: unreachable-code
+
+    exhaustive:
+      default-signifies-exhaustive: true
+
+    gosec:
+      excludes:
+        - G104 # Duplicates errcheck
+
+  exclusions:
+    generated: strict
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/mrwhyte/rig
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

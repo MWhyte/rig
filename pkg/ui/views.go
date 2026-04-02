@@ -7,6 +7,7 @@ import (
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
 )
 
@@ -20,30 +21,30 @@ var (
 			Foreground(colorMuted)
 )
 
-// StationItem implements list.Item for station list
+// StationItem implements list.Item for station list.
 type StationItem struct {
 	station    radiobrowser.Station
 	isFavorite bool
 }
 
+// Title returns the station name, with a star if favorited.
 func (i StationItem) Title() string {
 	name := i.station.Name
 	// Add ★ if favorited
 	if i.isFavorite {
-		name = name + " ★"
+		name += " ★"
 	}
 	return name
 }
+
+// Description returns a summary line with country, tags, codec, bitrate, and clicks.
 func (i StationItem) Description() string {
 	// Format tags
 	tags := i.station.Tags
 	if tags == "" {
 		tags = "no tags"
-	} else {
-		// Limit to 25 chars for space
-		if len(tags) > 25 {
-			tags = tags[:22] + "..."
-		}
+	} else if len(tags) > 25 {
+		tags = tags[:22] + "..."
 	}
 
 	return fmt.Sprintf("%s • %s • %s • %d kbps • %d clicks",
@@ -53,18 +54,20 @@ func (i StationItem) Description() string {
 		i.station.Bitrate,
 		i.station.ClickCount)
 }
+
+// FilterValue returns the station name for list filtering.
 func (i StationItem) FilterValue() string { return i.station.Name }
 
-// initList initializes the station list
+// initList initializes the station list.
 func (m *Model) initList() {
 	items := make([]list.Item, len(m.stations))
-	for i, station := range m.stations {
+	for i := range m.stations {
 		isFavorite := false
 		if m.favManager != nil {
-			isFavorite = m.favManager.IsFavorite(station.StationUUID)
+			isFavorite = m.favManager.IsFavorite(m.stations[i].StationUUID)
 		}
 		items[i] = StationItem{
-			station:    station,
+			station:    m.stations[i],
 			isFavorite: isFavorite,
 		}
 	}
@@ -145,18 +148,18 @@ func (m *Model) initList() {
 	}
 }
 
-// renderStationList renders the station list view (uses multi-panel layout)
+// renderStationList renders the station list view (uses multi-panel layout).
 func (m *Model) renderStationList() string {
 	return m.renderMultiPanelLayout()
 }
 
-// playStation starts playing a station
+// playStation starts playing a station.
 func (m *Model) playStation(station *radiobrowser.Station) (tea.Model, tea.Cmd) {
 	// Stop current playback
 	m.stopPlayback()
 
 	// Track click
-	go m.apiClient.TrackClick(station.StationUUID)
+	go func() { _, _ = m.apiClient.TrackClick(station.StationUUID) }()
 
 	// Start playback
 	if err := m.player.Play(station.URLResolved); err != nil {
@@ -168,7 +171,8 @@ func (m *Model) playStation(station *radiobrowser.Station) (tea.Model, tea.Cmd) 
 	m.isPlaying = true
 	m.waveFrame = 0
 
-	return m, m.waveTick()
+	cmd := m.waveTick()
+	return m, cmd
 }
 
 // applyTheme sets the theme by index and refreshes all theme-dependent UI state.
@@ -181,7 +185,7 @@ func (m *Model) applyTheme(index int) {
 	m.initList()
 }
 
-// stopPlayback stops current playback
+// stopPlayback stops current playback.
 func (m *Model) stopPlayback() {
 	if m.player != nil {
 		_ = m.player.Stop()
