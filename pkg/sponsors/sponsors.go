@@ -11,7 +11,7 @@ import (
 )
 
 // gistURL is the raw URL of the public Gist containing sponsors.json.
-// Update this after creating the Gist (see setup instructions in CLAUDE.md).
+// Update this after creating the Gist.
 const gistURL = "https://gist.githubusercontent.com/mrwhyte/1c23d0635fc400008be3dcea8f8d068c/raw/rig-sponsors.json"
 
 const cacheTTL = 24 * time.Hour
