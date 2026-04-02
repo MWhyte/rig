@@ -3,6 +3,8 @@
 **Internet radio in your terminal. Beautiful, fast, and keyboard-driven.**
 
 [![Release](https://github.com/MWhyte/rig/actions/workflows/release.yml/badge.svg)](https://github.com/MWhyte/rig/actions/workflows/release.yml)
+[![Lint](https://github.com/MWhyte/rig/actions/workflows/lint.yml/badge.svg)](https://github.com/MWhyte/rig/actions/workflows/lint.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/MWhyte/rig)](https://goreportcard.com/report/github.com/MWhyte/rig)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 [Install](#installation) | [Features](#features) | [Usage](#usage) | [Contributing](CONTRIBUTING.md) | [License](#license)
