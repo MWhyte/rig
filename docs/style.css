@@ -1,0 +1,414 @@
+:root {
+  --bg: #ffffff;
+  --bg-card: #f6f8fa;
+  --bg-code: #f0f2f5;
+  --accent: #2E6EB0;
+  --accent-hover: #245a91;
+  --text: #1a1a1a;
+  --text-muted: #656d76;
+  --text-dim: #8b949e;
+  --border: #d8dee4;
+  --radius: 12px;
+  --max-width: 1100px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Hero */
+
+.hero {
+  text-align: center;
+  padding: 80px 0 60px;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.hero-title span {
+  color: var(--accent);
+}
+
+.hero-tagline {
+  font-size: 1.35rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.hero-sub {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  margin-bottom: 36px;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 56px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+/* Terminal frame */
+
+.terminal {
+  background: #0a0e14;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #1a1e24;
+}
+
+.terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.terminal-dot.red { background: #ff5f57; }
+.terminal-dot.yellow { background: #febc2e; }
+.terminal-dot.green { background: #28c840; }
+
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+}
+
+.terminal img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* About */
+
+.about {
+  padding: 0 0 40px;
+}
+
+.about-text {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+/* Features */
+
+.features {
+  padding: 80px 0;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  transition: border-color 0.2s;
+}
+
+.feature-card:hover {
+  border-color: var(--text-dim);
+}
+
+.feature-icon {
+  font-size: 1.6rem;
+  margin-bottom: 12px;
+}
+
+.feature-card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feature-card p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Showcase */
+
+.showcase {
+  padding: 80px 0;
+}
+
+.showcase-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+.showcase-item {
+  text-align: center;
+}
+
+.showcase-item h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+/* Install */
+
+.install {
+  padding: 80px 0;
+}
+
+.install-note {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 36px;
+  font-size: 0.95rem;
+}
+
+.install-note a {
+  font-weight: 600;
+}
+
+.install-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.install-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.install-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+}
+
+.code-block {
+  position: relative;
+  background: #1a1e24;
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
+.code-block code {
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  font-size: 0.85rem;
+  color: #e6edf3;
+  white-space: pre;
+}
+
+.code-block .cmd {
+  color: #7ee787;
+}
+
+.code-block .arg {
+  color: #e6edf3;
+}
+
+.code-block .flag {
+  color: #79c0ff;
+}
+
+.code-block .url {
+  color: #d2a8ff;
+}
+
+.code-block .comment {
+  color: #8b949e;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #30363d;
+  border: none;
+  border-radius: 6px;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.code-block:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn:hover {
+  background: #484f58;
+  color: #e6edf3;
+}
+
+.install-card .note {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+
+/* Footer */
+
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}
+
+.footer-note {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 48px 0 40px;
+  }
+
+  .hero-title {
+    font-size: 2.2rem;
+  }
+
+  .hero-tagline {
+    font-size: 1.1rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .features,
+  .showcase,
+  .install {
+    padding: 48px 0;
+  }
+}

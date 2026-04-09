@@ -7,7 +7,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/MWhyte/rig)](https://goreportcard.com/report/github.com/MWhyte/rig)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
-[Install](#installation) | [Features](#features) | [Usage](#usage) | [Contributing](CONTRIBUTING.md) | [License](#license)
+[Website](https://rig.fm) | [Install](#installation) | [Features](#features) | [Usage](#usage) | [Contributing](CONTRIBUTING.md) | [License](#license)
 
 ## What is rig.fm?
 
@@ -26,15 +26,15 @@ No accounts. No ads. Just radio.
 
 ### Search and play
 <!-- Replace with actual gif -->
-![Searching and playing a station](.docs/assets/search.gif)
+![Searching and playing a station](docs/assets/search.gif)
 
 ### Themes
 <!-- Replace with actual gif -->
-![Switching themes](.docs/assets/themes.gif)
+![Switching themes](docs/assets/themes.gif)
 
 ### Favourites
 <!-- Replace with actual gif -->
-![Managing favourites](.docs/assets/favourites.gif)
+![Managing favourites](docs/assets/favourites.gif)
 
 
 ## Installation

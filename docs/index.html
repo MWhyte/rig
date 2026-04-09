@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>rig.fm — Terminal Radio Player</title>
+  <meta name="description" content="rig.fm is a beautiful, fast, keyboard-driven terminal radio player. Browse and listen to thousands of internet radio stations from your command line. Free, open source, no accounts required.">
+  <meta name="keywords" content="terminal radio, command line radio, CLI radio player, internet radio terminal, TUI radio, terminal music player, Go CLI, Bubble Tea, mpv radio, linux radio player, mac terminal radio">
+  <link rel="canonical" href="https://rig.fm">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="rig.fm — Terminal Radio Player">
+  <meta property="og:description" content="Listen to thousands of internet radio stations from your terminal. Beautiful, fast, keyboard-driven. Free and open source.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rig.fm">
+  <meta property="og:site_name" content="rig.fm">
+  <meta property="og:image" content="https://rig.fm/assets/search.gif">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="rig.fm — Terminal Radio Player">
+  <meta name="twitter:description" content="Listen to thousands of internet radio stations from your terminal. Beautiful, fast, keyboard-driven.">
+  <meta name="twitter:image" content="https://rig.fm/assets/search.gif">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "rig.fm",
+    "description": "A beautiful, fast, keyboard-driven terminal radio player. Browse and listen to thousands of internet radio stations from your command line.",
+    "url": "https://rig.fm",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "macOS, Linux",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+    "codeRepository": "https://github.com/MWhyte/rig",
+    "programmingLanguage": "Go"
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container">
+      <h1 class="hero-title"><span>rig</span>.fm</h1>
+      <p class="hero-tagline">Internet radio in your terminal. Beautiful, fast, and keyboard-driven.</p>
+      <p class="hero-sub">No accounts. No ads. Just radio.</p>
+      <div class="hero-buttons">
+        <a href="#install" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.5.5 0 0 1 .5.5v9.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 11.293V1.5A.5.5 0 0 1 8 1zM2 13.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/></svg>Install</a>
+        <a href="https://github.com/MWhyte/rig" target="_blank" rel="noopener noreferrer" class="btn btn-secondary"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+      </div>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="terminal-dot red"></div>
+          <div class="terminal-dot yellow"></div>
+          <div class="terminal-dot green"></div>
+          <span class="terminal-title">rig</span>
+        </div>
+        <img src="assets/search.gif" alt="rig.fm terminal radio player demo showing station search, browsing, and playback" loading="lazy" width="800" height="500">
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- What is rig.fm -->
+    <section class="about">
+      <div class="container">
+        <h2 class="section-title">What is rig.fm?</h2>
+        <p class="about-text">rig.fm is a free, open-source terminal radio player that lets you browse, search, and listen to thousands of internet radio stations without leaving the command line. Powered by the <a href="https://www.radio-browser.info/" target="_blank" rel="noopener noreferrer">Radio Browser</a> directory, it gives you access to stations from around the world, all wrapped in a beautiful TUI built with <a href="https://github.com/charmbracelet/bubbletea" target="_blank" rel="noopener noreferrer">Bubble Tea</a>.</p>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+      <div class="container">
+        <h2 class="section-title">Features</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🌍</div>
+            <h3>Browse worldwide</h3>
+            <p>Access thousands of internet radio stations from around the globe, powered by the Radio Browser directory.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <h3>Search and filter</h3>
+            <p>Find stations by genre, country, language, or name. Fuzzy search with autocomplete makes discovery fast.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎨</div>
+            <h3>Multiple themes</h3>
+            <p>Switch between beautiful color themes to match your terminal aesthetic. From classic to neon.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⌨️</div>
+            <h3>Keyboard-driven</h3>
+            <p>Navigate, play, pause, adjust volume, and manage favorites without ever touching the mouse.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⭐</div>
+            <h3>Favorites</h3>
+            <p>Save your go-to stations for quick access. Your favorites persist across sessions.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎵</div>
+            <h3>Now playing</h3>
+            <p>See what's playing with live metadata: song title, genre, codec, bitrate, and a visual waveform.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Showcase -->
+    <section class="showcase">
+      <div class="container">
+        <h2 class="section-title">See it in action</h2>
+        <div class="showcase-grid">
+          <div class="showcase-item">
+            <h3>Search and play</h3>
+            <div class="terminal">
+              <div class="terminal-bar">
+                <div class="terminal-dot red"></div>
+                <div class="terminal-dot yellow"></div>
+                <div class="terminal-dot green"></div>
+                <span class="terminal-title">rig</span>
+              </div>
+              <img src="assets/search.gif" alt="Terminal radio player searching for stations by name and playing audio" loading="lazy" width="800" height="500">
+            </div>
+          </div>
+          <div class="showcase-item">
+            <h3>Themes</h3>
+            <div class="terminal">
+              <div class="terminal-bar">
+                <div class="terminal-dot red"></div>
+                <div class="terminal-dot yellow"></div>
+                <div class="terminal-dot green"></div>
+                <span class="terminal-title">rig</span>
+              </div>
+              <img src="assets/themes.gif" alt="Switching between color themes in the terminal radio interface" loading="lazy" width="800" height="500">
+            </div>
+          </div>
+          <div class="showcase-item">
+            <h3>Favourites</h3>
+            <div class="terminal">
+              <div class="terminal-bar">
+                <div class="terminal-dot red"></div>
+                <div class="terminal-dot yellow"></div>
+                <div class="terminal-dot green"></div>
+                <span class="terminal-title">rig</span>
+              </div>
+              <img src="assets/favourites.gif" alt="Saving and managing favourite radio stations in the terminal" loading="lazy" width="800" height="500">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Install -->
+    <section class="install" id="install">
+      <div class="container">
+        <h2 class="section-title">Installation</h2>
+        <p class="install-note">Requires <a href="https://mpv.io/" target="_blank" rel="noopener noreferrer">mpv</a> for audio playback. Homebrew installs it automatically.</p>
+        <div class="install-methods">
+          <div class="install-card">
+            <h3>Homebrew (macOS and Linux)</h3>
+            <div class="code-block">
+              <code><span class="cmd">brew</span> <span class="arg">install</span> <span class="url">mwhyte/tap/rig</span></code>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+          </div>
+          <div class="install-card">
+            <h3>Go install</h3>
+            <div class="code-block">
+              <code><span class="cmd">go</span> <span class="arg">install</span> <span class="url">github.com/mrwhyte/rig/cmd/rig</span><span class="flag">@latest</span></code>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <p class="note">Requires Go 1.25 or later</p>
+          </div>
+          <div class="install-card">
+            <h3>Download binary</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Grab the latest release for your platform from the <a href="https://github.com/MWhyte/rig/releases" target="_blank" rel="noopener noreferrer">releases page</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="https://github.com/MWhyte/rig" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/sponsors/MWhyte" target="_blank" rel="noopener noreferrer">Sponsors</a>
+        <a href="https://github.com/MWhyte/rig/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a>
+        <a href="https://github.com/MWhyte/rig/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">AGPL-3.0</a>
+      </nav>
+      <p class="footer-note">&copy; <a href="https://mwhyte.dev" target="_blank" rel="noopener noreferrer">mwhyte.dev</a></p>
+    </div>
+  </footer>
+
+  <script>
+    function copyCode(btn) {
+      var code = btn.parentElement.querySelector("code").textContent;
+      navigator.clipboard.writeText(code).then(function() {
+        btn.textContent = "Copied!";
+        setTimeout(function() { btn.textContent = "Copy"; }, 1500);
+      });
+    }
+  </script>
+
+</body>
+</html>
