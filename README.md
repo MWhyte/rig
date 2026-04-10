@@ -2,6 +2,7 @@
 
 **Internet radio in your terminal. Beautiful, fast, and keyboard-driven.**
 
+[![pages-build-deployment](https://github.com/MWhyte/rig/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/MWhyte/rig/actions/workflows/pages/pages-build-deployment)
 [![Release](https://github.com/MWhyte/rig/actions/workflows/release.yml/badge.svg)](https://github.com/MWhyte/rig/actions/workflows/release.yml)
 [![Lint](https://github.com/MWhyte/rig/actions/workflows/lint.yml/badge.svg)](https://github.com/MWhyte/rig/actions/workflows/lint.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/MWhyte/rig)](https://goreportcard.com/report/github.com/MWhyte/rig)
