@@ -23,6 +23,7 @@ No accounts. No ads. Just radio.
 - 🎨 Beautiful terminal UI with multiple themes
 - ⌨️ Keyboard-driven interface for fast navigation
 - ⭐ Save your favourite stations
+- 🎤 Identify the playing track with one keypress — Shazam-style, no API key required
 - 🎵 Now playing display with station metadata
 
 ### Search and play
@@ -36,6 +37,11 @@ No accounts. No ads. Just radio.
 ### Favourites
 <!-- Replace with actual gif -->
 ![Managing favourites](docs/assets/favourites.gif)
+
+### Identify the playing track
+Press `i` while a station is playing. rig taps the audio, fingerprints it locally in pure Go, and asks Shazam to identify it. Press `o` to open the track on shazam.com.
+<!-- Replace with actual gif -->
+![Identifying a track in the terminal](docs/assets/identify.gif)
 
 
 ## Installation
@@ -85,6 +91,8 @@ rig
 | `Space` | Pause/Resume |
 | `+` / `-` | Volume up/down |
 | `s` | Search stations |
+| `i` | Identify the playing track |
+| `o` | Open identified track on shazam.com |
 | `?` | Help |
 | `q` | Quit |
 
