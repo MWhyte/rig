@@ -14,6 +14,12 @@ import (
 	"time"
 )
 
+// MPV IPC protocol literals.
+const (
+	mpvCmdKey         = "command"
+	mpvCmdSetProperty = "set_property"
+)
+
 // State represents the current player state.
 type State int
 
@@ -147,7 +153,7 @@ func (p *MPVPlayer) Pause() error {
 	}
 
 	if err := p.sendCommand(map[string]interface{}{
-		"command": []interface{}{"set_property", "pause", true},
+		mpvCmdKey: []interface{}{mpvCmdSetProperty, "pause", true},
 	}); err != nil {
 		return err
 	}
@@ -166,7 +172,7 @@ func (p *MPVPlayer) Resume() error {
 	}
 
 	if err := p.sendCommand(map[string]interface{}{
-		"command": []interface{}{"set_property", "pause", false},
+		mpvCmdKey: []interface{}{mpvCmdSetProperty, "pause", false},
 	}); err != nil {
 		return err
 	}
@@ -192,7 +198,7 @@ func (p *MPVPlayer) stopLocked() {
 
 	// Send quit command
 	_ = p.sendCommand(map[string]interface{}{
-		"command": []interface{}{"quit"},
+		mpvCmdKey: []interface{}{"quit"},
 	})
 
 	// Kill process if still running
@@ -224,7 +230,7 @@ func (p *MPVPlayer) SetVolume(volume int) error {
 
 	if p.state == StatePlaying || p.state == StatePaused {
 		if err := p.sendCommand(map[string]interface{}{
-			"command": []interface{}{"set_property", "volume", volume},
+			mpvCmdKey: []interface{}{mpvCmdSetProperty, "volume", volume},
 		}); err != nil {
 			return err
 		}
@@ -317,7 +323,7 @@ func (p *MPVPlayer) getProperty(property string) (interface{}, error) {
 
 	// Send command
 	cmd := map[string]interface{}{
-		"command":    []interface{}{"get_property", property},
+		mpvCmdKey:    []interface{}{"get_property", property},
 		"request_id": 1,
 	}
 	encoder := json.NewEncoder(conn)
