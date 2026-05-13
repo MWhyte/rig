@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -8,11 +9,13 @@ import (
 
 	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/progress"
+	"charm.land/bubbles/v2/spinner"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/mrwhyte/rig/pkg/config"
 	"github.com/mrwhyte/rig/pkg/favorites"
+	"github.com/mrwhyte/rig/pkg/identifier"
 	"github.com/mrwhyte/rig/pkg/player"
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
 	"github.com/mrwhyte/rig/pkg/sponsors"
@@ -117,6 +120,12 @@ type Model struct {
 	liveSponsors        []sponsors.Sponsor // Live sponsors loaded from Gist/cache
 	sponsorScrollOffset int                // Top of visible window into the virtual scroll list
 
+	// Track identification (Shazam)
+	showIdentifyModal bool
+	identifyTrack     *identifier.Track
+	identifyErr       error
+	identifySpinner   spinner.Model
+	identifyCancel    context.CancelFunc
 }
 
 // NewModel creates a new application model.
@@ -158,6 +167,8 @@ func NewModel() (*Model, error) {
 	)
 	volumeBar.EmptyColor = colorBorder
 
+	identifySpinner := spinner.New(spinner.WithSpinner(spinner.MiniDot))
+
 	m := &Model{
 		view:                ViewLoading,
 		apiClient:           apiClient,
@@ -173,6 +184,7 @@ func NewModel() (*Model, error) {
 		favManager:       favManager,
 		timerInput:       timerInput,
 		volumeBar:        volumeBar,
+		identifySpinner:  identifySpinner,
 	}
 
 	return m, nil
@@ -601,6 +613,25 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.volumeBar = newBar
 		return m, cmd
 
+	case identifyResultMsg:
+		// Ignore the result if the user dismissed the modal mid-flight.
+		if !m.showIdentifyModal {
+			return m, nil
+		}
+		m.identifyTrack = msg.track
+		m.identifyErr = msg.err
+		return m, nil
+
+	case spinner.TickMsg:
+		// Only keep ticking while the identification spinner should be
+		// visible. Other spinner instances are ignored by ID inside Update.
+		if !m.isIdentifying() {
+			return m, nil
+		}
+		var cmd tea.Cmd
+		m.identifySpinner, cmd = m.identifySpinner.Update(msg)
+		return m, cmd
+
 	case waveTickMsg:
 		if m.isPlaying {
 			m.waveFrame++
@@ -637,6 +668,8 @@ func (m *Model) View() tea.View {
 		content = m.renderTimerModal()
 	case m.showThemeModal:
 		content = m.renderThemeModal()
+	case m.showIdentifyModal:
+		content = m.renderIdentifyModal()
 	default:
 		switch m.view {
 		case ViewLoading:

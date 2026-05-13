@@ -6,7 +6,11 @@ require (
 	charm.land/bubbles/v2 v2.0.0
 	charm.land/bubbletea/v2 v2.0.1
 	charm.land/lipgloss/v2 v2.0.0
+	github.com/google/uuid v1.6.0
+	github.com/hajimehoshi/go-mp3 v0.3.4
 	github.com/sahilm/fuzzy v0.1.1
+	golang.org/x/time v0.15.0
+	gonum.org/v1/gonum v0.17.0
 )
 
 require (

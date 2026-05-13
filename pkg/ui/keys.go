@@ -18,6 +18,7 @@ const (
 	keyCtrlC = "ctrl+c"
 	keyEnter = "enter"
 	keyEsc   = "esc"
+	keyOpen  = "o"
 )
 
 // handleKeyPress handles keyboard input.
@@ -29,6 +30,11 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// If timer modal is open, handle input differently
 	if m.showTimerModal {
 		return m.handleTimerModalInput(msg)
+	}
+
+	// If the identify modal is open, route keys through it.
+	if m.showIdentifyModal {
+		return m.handleIdentifyModalInput(msg)
 	}
 
 	// If editing a filter, handle input differently
@@ -62,47 +68,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "space":
-		// Toggle play/pause, or play selected station
-		switch {
-		case m.isPlaying && m.playing != nil:
-			// Currently playing - pause it
-			if err := m.player.Pause(); err == nil {
-				m.isPlaying = false
-				if m.sleepTimerActive {
-					m.sleepTimerPaused = true
-					elapsed := time.Since(m.sleepTimerStart)
-					m.sleepTimerRemaining = m.sleepTimerDuration - elapsed
-				}
-			}
-			return m, nil
-		case !m.isPlaying && m.playing != nil:
-			// Paused - resume it
-			if err := m.player.Resume(); err == nil {
-				m.isPlaying = true
-				if m.sleepTimerActive && m.sleepTimerPaused {
-					m.sleepTimerPaused = false
-					m.sleepTimerDuration = m.sleepTimerRemaining
-					m.sleepTimerStart = time.Now()
-					waveCmd := m.waveTick()
-					sleepCmd := m.sleepTimerTick()
-					return m, tea.Batch(waveCmd, sleepCmd)
-				}
-				cmd := m.waveTick()
-				return m, cmd
-			}
-			return m, nil
-		case m.focusedSection == SectionStationList && len(m.stations) > 0:
-			// No station playing and in station list - play selected station
-			// Get the actual selected item from the filtered list
-			if item := m.stationList.SelectedItem(); item != nil {
-				if stationItem, ok := item.(StationItem); ok {
-					return m, func() tea.Msg {
-						return playStationMsg{&stationItem.station}
-					}
-				}
-			}
-		}
-		return m, nil
+		return m.handleSpaceKey()
 
 	case "s":
 		// Stop playback
@@ -143,6 +109,15 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.timerInput.SetValue("")
 		}
 		return m, m.timerInput.Focus()
+
+	case "i":
+		// Identify the currently playing track via Shazam.
+		if m.playing == nil {
+			return m, nil
+		}
+		m.resetIdentifyState()
+		m.showIdentifyModal = true
+		return m, tea.Batch(m.startIdentify(), m.identifySpinner.Tick)
 
 	case "f":
 		// Toggle favorite for selected station
@@ -576,5 +551,51 @@ func (m *Model) handleThemeModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 		return m, nil
 	}
 
+	return m, nil
+}
+
+// handleSpaceKey handles the space-bar shortcut: toggle play/pause when a
+// station is loaded, or play the selected station when nothing is loaded.
+func (m *Model) handleSpaceKey() (tea.Model, tea.Cmd) {
+	switch {
+	case m.isPlaying && m.playing != nil:
+		// Currently playing - pause it.
+		if err := m.player.Pause(); err == nil {
+			m.isPlaying = false
+			if m.sleepTimerActive {
+				m.sleepTimerPaused = true
+				elapsed := time.Since(m.sleepTimerStart)
+				m.sleepTimerRemaining = m.sleepTimerDuration - elapsed
+			}
+		}
+		return m, nil
+
+	case !m.isPlaying && m.playing != nil:
+		// Paused - resume it.
+		if err := m.player.Resume(); err == nil {
+			m.isPlaying = true
+			if m.sleepTimerActive && m.sleepTimerPaused {
+				m.sleepTimerPaused = false
+				m.sleepTimerDuration = m.sleepTimerRemaining
+				m.sleepTimerStart = time.Now()
+				waveCmd := m.waveTick()
+				sleepCmd := m.sleepTimerTick()
+				return m, tea.Batch(waveCmd, sleepCmd)
+			}
+			cmd := m.waveTick()
+			return m, cmd
+		}
+		return m, nil
+
+	case m.focusedSection == SectionStationList && len(m.stations) > 0:
+		// No station playing and in station list - play selected station.
+		if item := m.stationList.SelectedItem(); item != nil {
+			if stationItem, ok := item.(StationItem); ok {
+				return m, func() tea.Msg {
+					return playStationMsg{&stationItem.station}
+				}
+			}
+		}
+	}
 	return m, nil
 }
