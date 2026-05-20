@@ -136,8 +136,6 @@ func (m *Model) renderIdentifyModal() string {
 		content = m.renderIdentifyError()
 	case m.identifyTrack != nil:
 		content = m.renderIdentifyResult()
-	default:
-		content = "\n  (nothing to display)\n"
 	}
 
 	panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
