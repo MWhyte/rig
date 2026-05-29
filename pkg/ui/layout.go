@@ -89,7 +89,7 @@ func (m *Model) renderFooter() string {
 		shortcuts = "↑↓/jk: select • enter: edit • c: clear"
 	}
 
-	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • t: sleep timer • ctrl+t: theme • ctrl+c: quit",
+	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • i: identify • t: sleep timer • ctrl+t: theme • ctrl+c: quit",
 		m.focusedSection.String(),
 		shortcuts,
 	)
