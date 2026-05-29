@@ -187,14 +187,29 @@ func NewModel() (*Model, error) {
 		identifySpinner:  identifySpinner,
 	}
 
+	// If the user has saved favourites, default to showing them with the
+	// Favourites filter pre-selected. Otherwise focus the Filters pane so
+	// the user lands on the search controls.
+	if favManager != nil && len(favManager.GetAll()) > 0 {
+		m.filters.FavoritesOnly = true
+		m.selectedFilterIndex = 4
+		m.focusedSection = SectionStationList
+	} else {
+		m.focusedSection = SectionFilters
+	}
+
 	return m, nil
 }
 
 // Init initializes the model.
 func (m *Model) Init() tea.Cmd {
 	vol, _ := m.player.GetVolume()
+	stationCmd := m.fetchPopularStations()
+	if m.filters.FavoritesOnly {
+		stationCmd = m.fetchFilteredStations()
+	}
 	return tea.Batch(
-		m.fetchPopularStations(),
+		stationCmd,
 		m.fetchMetadata(),
 		m.fetchSponsors(),
 		m.tick(),
