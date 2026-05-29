@@ -31,55 +31,34 @@ func (m *Model) renderMultiPanelLayout() string {
 	leftWidth := int(float64(m.width) * 0.70)
 	rightWidth := m.width - leftWidth
 
-	// Reserve space for header and footer
-	headerHeight := lipgloss.Height(m.renderHeader())
-	footerHeight := lipgloss.Height(m.renderFooter())
-	chrome := headerHeight + footerHeight
+	header := m.renderHeader()
+	headerHeight := lipgloss.Height(header)
 
-	// topHeight must be at least 11: border(2) + title(1) + blank(1) + 5 filters(5) + blank(1) + help(1)
-	// to prevent the filters panel from overflowing and misaligning the station list.
-	topHeight := max(11, int(float64(m.height)*0.30))
-	bottomHeight := m.height - topHeight - chrome
+	// Top panel must fit border(2) + title(1) + blank(1) + 5 filters(5) + blank(1) + help(1) = 11.
+	topPanelHeight := max(11, int(float64(m.height)*0.30)-2)
+	// Bottom panel takes everything left after header + top, so the layout
+	// fills the whole terminal with no dead row at the bottom.
+	bottomPanelHeight := m.height - headerHeight - topPanelHeight
 
 	// Build left column: Filters on top, Station List below
-	filtersPanel := m.renderFiltersPanel(leftWidth-3, topHeight-2)
-	stationListPanel := m.renderStationListPanel(leftWidth-3, bottomHeight)
+	filtersPanel := m.renderFiltersPanel(leftWidth-3, topPanelHeight)
+	stationListPanel := m.renderStationListPanel(leftWidth-3, bottomPanelHeight)
 	leftColumn := lipgloss.JoinVertical(lipgloss.Left, filtersPanel, stationListPanel)
 
 	// Build right column: Sponsors on top, Player below
-	sponsorsPanel := m.renderSponsorsPanel(rightWidth-3, topHeight-2)
-	playerPanel := m.renderPlayerPanel(rightWidth-3, bottomHeight)
+	sponsorsPanel := m.renderSponsorsPanel(rightWidth-3, topPanelHeight)
+	playerPanel := m.renderPlayerPanel(rightWidth-3, bottomPanelHeight)
 	rightColumn := lipgloss.JoinVertical(lipgloss.Left, sponsorsPanel, playerPanel)
 
-	// Combine columns horizontally
 	mainContent := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, rightColumn)
 
-	// Add header and footer
-	header := m.renderHeader()
-	footer := m.renderFooter()
-
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		header,
-		mainContent,
-		footer,
-	)
+	return lipgloss.JoinVertical(lipgloss.Left, header, mainContent)
 }
 
 // renderHeader renders the app header.
 func (m *Model) renderHeader() string {
 	title := titleStyle.Render(" rig.fm - Terminal Radio")
 	return title
-}
-
-// renderFooter renders the help footer.
-func (m *Model) renderFooter() string {
-	// While editing a filter the relevant keys are non-obvious, so keep the
-	// inline hint instead of pointing at the help modal.
-	if m.editingFilter != FilterNone {
-		return "\n" + helpStyle.Render("Type to edit filter • enter: apply • esc: cancel")
-	}
-	return "\n" + helpStyle.Render("? help • q quit")
 }
 
 // renderStationListPanel renders the station list panel.
@@ -164,8 +143,7 @@ func (m *Model) renderPlayerPanel(width, height int) string {
 			"\n\n " +
 			lipgloss.NewStyle().Foreground(colorDim).Render("Select a station and press Enter")
 
-		panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
-		return borderStyle.Width(width).Height(height).Render(panel)
+		return playerPanelBox(borderStyle, title, content, width, height)
 	}
 
 	var info strings.Builder
@@ -245,8 +223,28 @@ func (m *Model) renderPlayerPanel(width, height int) string {
 	}
 	info.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render(techInfo))
 
-	panel := lipgloss.JoinVertical(lipgloss.Left, title, info.String())
-	return borderStyle.Width(width).Height(height).Render(panel)
+	return playerPanelBox(borderStyle, title, info.String(), width, height)
+}
+
+// playerPanelBox assembles the player panel with the global "? help • q quit"
+// hint pinned to its bottom row. Padding pushes the hint below the panel's
+// content; when the panel is too short to fit the hint, it's dropped instead
+// of squashing the now-playing info.
+func playerPanelBox(border lipgloss.Style, title, content string, width, height int) string {
+	const hintText = " ? help • q quit"
+
+	// Inner area = height - 2 (border). Reserve 1 line for title, 1 for hint.
+	contentHeight := height - 4
+	if contentHeight < 1 {
+		// Terminal too short; skip the hint so the content still fits.
+		panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
+		return border.Width(width).Height(height).Render(panel)
+	}
+
+	padded := lipgloss.NewStyle().Height(contentHeight).Render(content)
+	hint := lipgloss.NewStyle().Foreground(colorMuted).Render(hintText)
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, padded, hint)
+	return border.Width(width).Height(height).Render(panel)
 }
 
 // renderFiltersPanel renders the filters panel.
