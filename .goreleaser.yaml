@@ -23,6 +23,29 @@ archives:
 checksum:
   name_template: checksums.txt
 
+changelog:
+  sort: asc
+  use: git
+  filters:
+    exclude:
+      - "^chore:"
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^style:"
+      - "^refactor:"
+      - "Merge pull request"
+      - "Merge branch"
+  groups:
+    - title: Features
+      regexp: '^feat(\(.+\))?!?:'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^fix(\(.+\))?!?:'
+      order: 1
+    - title: Other Changes
+      order: 999
+
 brews:
   - name: rig
     repository:
