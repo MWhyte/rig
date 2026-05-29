@@ -8,7 +8,8 @@ import (
 
 // Config holds user preferences that persist across sessions.
 type Config struct {
-	Theme string `json:"theme"`
+	Theme  string `json:"theme"`
+	Volume *int   `json:"volume,omitempty"`
 }
 
 func configPath() (string, error) {
@@ -57,4 +58,18 @@ func Save(cfg *Config) error {
 		return err
 	}
 	return os.WriteFile(path, data, 0o600)
+}
+
+// SetTheme persists the theme, preserving other config fields.
+func SetTheme(theme string) error {
+	cfg, _ := Load()
+	cfg.Theme = theme
+	return Save(cfg)
+}
+
+// SetVolume persists the volume (0-100), preserving other config fields.
+func SetVolume(vol int) error {
+	cfg, _ := Load()
+	cfg.Volume = &vol
+	return Save(cfg)
 }

@@ -155,9 +155,18 @@ func NewModel() (*Model, error) {
 		fmt.Fprintf(os.Stderr, "Warning: Could not load favorites: %v\n", err)
 	}
 
-	// Load and apply saved theme
-	if cfg, err := config.Load(); err == nil && cfg.Theme != "" {
-		setTheme(themeIndexByName(cfg.Theme))
+	// Config errors are intentionally swallowed: it's convenience, not critical.
+	if cfg, err := config.Load(); err == nil {
+		if cfg.Theme != "" {
+			setTheme(themeIndexByName(cfg.Theme))
+		}
+		if cfg.Volume != nil {
+			_ = p.SetVolume(*cfg.Volume)
+		} else {
+			// First run: persist the player's default volume.
+			vol, _ := p.GetVolume()
+			_ = config.SetVolume(vol)
+		}
 	}
 
 	volumeBar := progress.New(

@@ -81,6 +81,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		vol, _ := m.player.GetVolume()
 		newVol := min(vol+5, 100)
 		_ = m.player.SetVolume(newVol)
+		_ = config.SetVolume(newVol)
 		return m, m.volumeBar.SetPercent(float64(newVol) / 100.0)
 
 	case "-", "_":
@@ -88,6 +89,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		vol, _ := m.player.GetVolume()
 		newVol := max(vol-5, 0)
 		_ = m.player.SetVolume(newVol)
+		_ = config.SetVolume(newVol)
 		return m, m.volumeBar.SetPercent(float64(newVol) / 100.0)
 
 	case "ctrl+t":
@@ -540,8 +542,7 @@ func (m *Model) handleThemeModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 	case keyEnter:
 		// Confirm, save to config
 		m.showThemeModal = false
-		cfg := &config.Config{Theme: themes[themeIndex].Name}
-		_ = config.Save(cfg)
+		_ = config.SetTheme(themes[themeIndex].Name)
 		return m, nil
 
 	case keyEsc:
