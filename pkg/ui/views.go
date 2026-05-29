@@ -11,15 +11,10 @@ import (
 	"github.com/mrwhyte/rig/pkg/radiobrowser"
 )
 
-var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(colorTitle).
-			MarginBottom(1)
-
-	helpStyle = lipgloss.NewStyle().
-			Foreground(colorMuted)
-)
+var titleStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(colorTitle).
+	MarginBottom(1)
 
 // StationItem implements list.Item for station list.
 type StationItem struct {
@@ -120,12 +115,16 @@ func (m *Model) initList() {
 	m.stationList.SetShowStatusBar(true)
 	m.stationList.SetFilteringEnabled(true)
 
-	// Update help to include paging instructions
+	// Surface paging and favourite-toggle in the panel's built-in help.
 	m.stationList.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{
 			key.NewBinding(
 				key.WithKeys("left", "right"),
 				key.WithHelp("←/→", "page"),
+			),
+			key.NewBinding(
+				key.WithKeys("f"),
+				key.WithHelp("f", "toggle fav"),
 			),
 		}
 	}
@@ -135,13 +134,19 @@ func (m *Model) initList() {
 				key.WithKeys("left", "right"),
 				key.WithHelp("←/→", "page up/down"),
 			),
+			key.NewBinding(
+				key.WithKeys("f"),
+				key.WithHelp("f", "toggle favourite"),
+			),
 		}
 	}
 
-	// Disable default quit keys (q and esc) - we only want ctrl+c
-	m.stationList.KeyMap.Quit.SetEnabled(false)
-	m.stationList.KeyMap.ForceQuit.SetEnabled(false)
-	m.stationList.KeyMap.CloseFullHelp.SetEnabled(false)
+	// Disable the list's built-in quit bindings. DisableQuitKeybindings sets
+	// the sticky flag the list checks in updateKeybindings(); calling
+	// SetEnabled(false) directly is not enough because the list re-enables
+	// Quit on every filter-state or size change. The full-help toggle is
+	// suppressed at render time in renderStationListPanel for the same reason.
+	m.stationList.DisableQuitKeybindings()
 
 	if m.width > 0 && m.height > 0 {
 		m.stationList.SetSize(m.width, m.height-10)

@@ -23,47 +23,48 @@ func activePanelTitleStyle() lipgloss.Style {
 	return lipgloss.NewStyle().Bold(true).Foreground(colorAccent).Padding(0, 1)
 }
 
+// Minimum terminal size we can sensibly lay out. Below this we render a
+// "too small" message instead of trying to fit the multi-panel layout, which
+// would otherwise produce negative panel heights and crash.
+const (
+	minLayoutWidth  = 80
+	minLayoutHeight = 26
+)
+
 // renderMultiPanelLayout renders the main multi-panel layout.
 func (m *Model) renderMultiPanelLayout() string {
+	if m.width < minLayoutWidth || m.height < minLayoutHeight {
+		return m.renderTooSmall()
+	}
+
 	// Calculate dimensions
 	// Left column (70% width): Filters + Station List
 	// Right column (30% width): Player + Sponsors
 	leftWidth := int(float64(m.width) * 0.70)
 	rightWidth := m.width - leftWidth
 
-	// Reserve space for header and footer
-	headerHeight := lipgloss.Height(m.renderHeader())
-	footerHeight := lipgloss.Height(m.renderFooter())
-	chrome := headerHeight + footerHeight
+	header := m.renderHeader()
+	headerHeight := lipgloss.Height(header)
 
-	// topHeight must be at least 11: border(2) + title(1) + blank(1) + 5 filters(5) + blank(1) + help(1)
-	// to prevent the filters panel from overflowing and misaligning the station list.
-	topHeight := max(11, int(float64(m.height)*0.30))
-	bottomHeight := m.height - topHeight - chrome
+	// Top panel must fit border(2) + title(1) + blank(1) + 5 filters(5) + blank(1) + help(1) = 11.
+	topPanelHeight := max(11, int(float64(m.height)*0.30)-2)
+	// Bottom panel takes everything left after header + top, so the layout
+	// fills the whole terminal with no dead row at the bottom.
+	bottomPanelHeight := m.height - headerHeight - topPanelHeight
 
 	// Build left column: Filters on top, Station List below
-	filtersPanel := m.renderFiltersPanel(leftWidth-3, topHeight-2)
-	stationListPanel := m.renderStationListPanel(leftWidth-3, bottomHeight)
+	filtersPanel := m.renderFiltersPanel(leftWidth-3, topPanelHeight)
+	stationListPanel := m.renderStationListPanel(leftWidth-3, bottomPanelHeight)
 	leftColumn := lipgloss.JoinVertical(lipgloss.Left, filtersPanel, stationListPanel)
 
 	// Build right column: Sponsors on top, Player below
-	sponsorsPanel := m.renderSponsorsPanel(rightWidth-3, topHeight-2)
-	playerPanel := m.renderPlayerPanel(rightWidth-3, bottomHeight)
+	sponsorsPanel := m.renderSponsorsPanel(rightWidth-3, topPanelHeight)
+	playerPanel := m.renderPlayerPanel(rightWidth-3, bottomPanelHeight)
 	rightColumn := lipgloss.JoinVertical(lipgloss.Left, sponsorsPanel, playerPanel)
 
-	// Combine columns horizontally
 	mainContent := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, rightColumn)
 
-	// Add header and footer
-	header := m.renderHeader()
-	footer := m.renderFooter()
-
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		header,
-		mainContent,
-		footer,
-	)
+	return lipgloss.JoinVertical(lipgloss.Left, header, mainContent)
 }
 
 // renderHeader renders the app header.
@@ -72,35 +73,24 @@ func (m *Model) renderHeader() string {
 	return title
 }
 
-// renderFooter renders the help footer.
-func (m *Model) renderFooter() string {
-	// If editing a filter, show different help
-	if m.editingFilter != FilterNone {
-		help := "Type to edit filter • enter: apply • esc: cancel"
-		return "\n" + helpStyle.Render(help)
-	}
-
-	var shortcuts string
-
-	switch m.focusedSection {
-	case SectionStationList:
-		shortcuts = "↑↓/jk: navigate • enter/space: play • f: toggle fav"
-	case SectionFilters:
-		shortcuts = "↑↓/jk: select • enter: edit • c: clear"
-	}
-
-	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • i: identify • t: sleep timer • ctrl+t: theme • ctrl+c: quit",
-		m.focusedSection.String(),
-		shortcuts,
+// renderTooSmall is the fallback for terminals below the minimum layout size.
+// Resizing back up recovers the normal view on the next render.
+func (m *Model) renderTooSmall() string {
+	msg := lipgloss.NewStyle().Foreground(colorMuted).Align(lipgloss.Center).Render(
+		fmt.Sprintf("Terminal too small.\nResize to at least %d × %d.", minLayoutWidth, minLayoutHeight),
 	)
-
-	return "\n" + helpStyle.Render(help)
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, msg)
 }
 
 // renderStationListPanel renders the station list panel.
 func (m *Model) renderStationListPanel(width, height int) string {
 	// width-2 for border side chars, height-3 for border top/bottom + title line
 	m.stationList.SetSize(width-2, height-3)
+	// SetSize re-enables ShowFullHelp/CloseFullHelp through the list's
+	// updateKeybindings(), so we suppress them again here. Our own modal
+	// owns "?", not the list's built-in full-help toggle.
+	m.stationList.KeyMap.ShowFullHelp.SetEnabled(false)
+	m.stationList.KeyMap.CloseFullHelp.SetEnabled(false)
 
 	// Get border style based on focus
 	borderStyle := inactiveBorderStyle()
@@ -137,8 +127,12 @@ var waveFrames = []string{
 	"▃▂▁▂▃▂▁▁",
 }
 
-// truncateLines limits s to at most n lines.
+// truncateLines limits s to at most n lines. Returns an empty string for
+// non-positive n so callers can pass derived heights without bounds checks.
 func truncateLines(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
 	lines := strings.Split(s, "\n")
 	if len(lines) <= n {
 		return s
@@ -174,8 +168,7 @@ func (m *Model) renderPlayerPanel(width, height int) string {
 			"\n\n " +
 			lipgloss.NewStyle().Foreground(colorDim).Render("Select a station and press Enter")
 
-		panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
-		return borderStyle.Width(width).Height(height).Render(panel)
+		return playerPanelBox(borderStyle, title, content, width, height)
 	}
 
 	var info strings.Builder
@@ -255,8 +248,28 @@ func (m *Model) renderPlayerPanel(width, height int) string {
 	}
 	info.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render(techInfo))
 
-	panel := lipgloss.JoinVertical(lipgloss.Left, title, info.String())
-	return borderStyle.Width(width).Height(height).Render(panel)
+	return playerPanelBox(borderStyle, title, info.String(), width, height)
+}
+
+// playerPanelBox assembles the player panel with the global "? help • q quit"
+// hint pinned to its bottom row. Padding pushes the hint below the panel's
+// content; when the panel is too short to fit the hint, it's dropped instead
+// of squashing the now-playing info.
+func playerPanelBox(border lipgloss.Style, title, content string, width, height int) string {
+	const hintText = " ? help • q quit"
+
+	// Inner area = height - 2 (border). Reserve 1 line for title, 1 for hint.
+	contentHeight := height - 4
+	if contentHeight < 1 {
+		// Terminal too short; skip the hint so the content still fits.
+		panel := lipgloss.JoinVertical(lipgloss.Left, title, content)
+		return border.Width(width).Height(height).Render(panel)
+	}
+
+	padded := lipgloss.NewStyle().Height(contentHeight).Render(content)
+	hint := lipgloss.NewStyle().Foreground(colorMuted).Render(hintText)
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, padded, hint)
+	return border.Width(width).Height(height).Render(panel)
 }
 
 // renderFiltersPanel renders the filters panel.
@@ -399,6 +412,64 @@ func (m *Model) renderThemeModal() string {
 		BorderForeground(colorAccent).
 		Padding(1, 2).
 		Width(30).
+		Render(panel)
+
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
+}
+
+// renderHelpModal renders a centred modal listing all keyboard shortcuts.
+func (m *Model) renderHelpModal() string {
+	const modalWidth = 60
+
+	title := lipgloss.NewStyle().Bold(true).Foreground(colorTitle).Padding(0, 1).
+		Render("Keyboard Shortcuts")
+
+	headingStyle := lipgloss.NewStyle().Bold(true).Foreground(colorAccent)
+	keyStyle := lipgloss.NewStyle().Foreground(colorTitle).Bold(true)
+	descStyle := lipgloss.NewStyle().Foreground(colorMuted)
+
+	var b strings.Builder
+	heading := func(name string) {
+		fmt.Fprintf(&b, "\n  %s\n", headingStyle.Render(name))
+	}
+	row := func(key, desc string) {
+		fmt.Fprintf(&b, "    %s  %s\n", keyStyle.Width(14).Render(key), descStyle.Render(desc))
+	}
+
+	heading("Global")
+	row("?", "Open help")
+	row("tab / S-tab", "Switch sections")
+	row("space", "Play / pause")
+	row("s", "Stop")
+	row("+ / -", "Volume up / down")
+	row("i", "Identify track")
+	row("t", "Sleep timer")
+	row("ctrl+t", "Theme picker")
+	row("q / ctrl+c", "Quit")
+
+	heading("Station List")
+	row("↑↓ / jk", "Navigate")
+	row("← →", "Page")
+	row("enter", "Play station")
+	row("f", "Toggle favourite")
+	row("/", "Filter list")
+
+	heading("Filters")
+	row("↑↓ / jk", "Select")
+	row("enter", "Edit selected")
+	row("1-5", "Jump to filter")
+	row("c", "Clear all")
+
+	b.WriteString("\n  ")
+	b.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render("any key to close"))
+
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, b.String())
+
+	modal := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorAccent).
+		Padding(1, 2).
+		Width(modalWidth).
 		Render(panel)
 
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
