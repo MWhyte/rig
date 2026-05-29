@@ -116,6 +116,9 @@ type Model struct {
 	themeModalIndex    int // currently highlighted theme in modal
 	originalThemeIndex int // theme before modal was opened (for esc revert)
 
+	// Help modal
+	showHelpModal bool
+
 	// Sponsors
 	liveSponsors        []sponsors.Sponsor // Live sponsors loaded from Gist/cache
 	sponsorScrollOffset int                // Top of visible window into the virtual scroll list
@@ -694,6 +697,8 @@ func (m *Model) View() tea.View {
 		content = m.renderThemeModal()
 	case m.showIdentifyModal:
 		content = m.renderIdentifyModal()
+	case m.showHelpModal:
+		content = m.renderHelpModal()
 	default:
 		switch m.view {
 		case ViewLoading:

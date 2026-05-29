@@ -37,6 +37,11 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m.handleIdentifyModalInput(msg)
 	}
 
+	// If the help modal is open, route keys through it.
+	if m.showHelpModal {
+		return m.handleHelpModalInput(msg)
+	}
+
 	// If editing a filter, handle input differently
 	if m.editingFilter != FilterNone {
 		return m.handleFilterInput(msg)
@@ -53,7 +58,7 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 	// Global shortcuts (work in any section)
 	switch msg.String() {
-	case keyCtrlC:
+	case keyCtrlC, "q":
 		m.stopPlayback()
 		return m, tea.Quit
 
@@ -97,6 +102,11 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.originalThemeIndex = themeIndex
 		m.themeModalIndex = themeIndex
 		m.showThemeModal = true
+		return m, nil
+
+	case "?":
+		// Open help modal
+		m.showHelpModal = true
 		return m, nil
 
 	case "t":
@@ -552,6 +562,17 @@ func (m *Model) handleThemeModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 		return m, nil
 	}
 
+	return m, nil
+}
+
+// handleHelpModalInput dismisses the help modal on any key, except ctrl+c
+// which still quits the app.
+func (m *Model) handleHelpModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	if msg.String() == keyCtrlC {
+		m.stopPlayback()
+		return m, tea.Quit
+	}
+	m.showHelpModal = false
 	return m, nil
 }
 

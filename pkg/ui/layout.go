@@ -74,33 +74,23 @@ func (m *Model) renderHeader() string {
 
 // renderFooter renders the help footer.
 func (m *Model) renderFooter() string {
-	// If editing a filter, show different help
+	// While editing a filter the relevant keys are non-obvious, so keep the
+	// inline hint instead of pointing at the help modal.
 	if m.editingFilter != FilterNone {
-		help := "Type to edit filter • enter: apply • esc: cancel"
-		return "\n" + helpStyle.Render(help)
+		return "\n" + helpStyle.Render("Type to edit filter • enter: apply • esc: cancel")
 	}
-
-	var shortcuts string
-
-	switch m.focusedSection {
-	case SectionStationList:
-		shortcuts = "↑↓/jk: navigate • enter/space: play • f: toggle fav"
-	case SectionFilters:
-		shortcuts = "↑↓/jk: select • enter: edit • c: clear"
-	}
-
-	help := fmt.Sprintf("tab: switch sections [%s] • %s • space: pause • +/-: volume • i: identify • t: sleep timer • ctrl+t: theme • ctrl+c: quit",
-		m.focusedSection.String(),
-		shortcuts,
-	)
-
-	return "\n" + helpStyle.Render(help)
+	return "\n" + helpStyle.Render("? help • q quit")
 }
 
 // renderStationListPanel renders the station list panel.
 func (m *Model) renderStationListPanel(width, height int) string {
 	// width-2 for border side chars, height-3 for border top/bottom + title line
 	m.stationList.SetSize(width-2, height-3)
+	// SetSize re-enables ShowFullHelp/CloseFullHelp through the list's
+	// updateKeybindings(), so we suppress them again here. Our own modal
+	// owns "?", not the list's built-in full-help toggle.
+	m.stationList.KeyMap.ShowFullHelp.SetEnabled(false)
+	m.stationList.KeyMap.CloseFullHelp.SetEnabled(false)
 
 	// Get border style based on focus
 	borderStyle := inactiveBorderStyle()
@@ -399,6 +389,64 @@ func (m *Model) renderThemeModal() string {
 		BorderForeground(colorAccent).
 		Padding(1, 2).
 		Width(30).
+		Render(panel)
+
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
+}
+
+// renderHelpModal renders a centred modal listing all keyboard shortcuts.
+func (m *Model) renderHelpModal() string {
+	const modalWidth = 60
+
+	title := lipgloss.NewStyle().Bold(true).Foreground(colorTitle).Padding(0, 1).
+		Render("Keyboard Shortcuts")
+
+	headingStyle := lipgloss.NewStyle().Bold(true).Foreground(colorAccent)
+	keyStyle := lipgloss.NewStyle().Foreground(colorTitle).Bold(true)
+	descStyle := lipgloss.NewStyle().Foreground(colorMuted)
+
+	var b strings.Builder
+	heading := func(name string) {
+		fmt.Fprintf(&b, "\n  %s\n", headingStyle.Render(name))
+	}
+	row := func(key, desc string) {
+		fmt.Fprintf(&b, "    %s  %s\n", keyStyle.Width(14).Render(key), descStyle.Render(desc))
+	}
+
+	heading("Global")
+	row("?", "Open help")
+	row("tab / S-tab", "Switch sections")
+	row("space", "Play / pause")
+	row("s", "Stop")
+	row("+ / -", "Volume up / down")
+	row("i", "Identify track")
+	row("t", "Sleep timer")
+	row("ctrl+t", "Theme picker")
+	row("q / ctrl+c", "Quit")
+
+	heading("Station List")
+	row("↑↓ / jk", "Navigate")
+	row("← →", "Page")
+	row("enter", "Play station")
+	row("f", "Toggle favourite")
+	row("/", "Filter list")
+
+	heading("Filters")
+	row("↑↓ / jk", "Select")
+	row("enter", "Edit selected")
+	row("1-5", "Jump to filter")
+	row("c", "Clear all")
+
+	b.WriteString("\n  ")
+	b.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render("any key to close"))
+
+	panel := lipgloss.JoinVertical(lipgloss.Left, title, b.String())
+
+	modal := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorAccent).
+		Padding(1, 2).
+		Width(modalWidth).
 		Render(panel)
 
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
