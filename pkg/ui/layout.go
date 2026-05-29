@@ -23,8 +23,20 @@ func activePanelTitleStyle() lipgloss.Style {
 	return lipgloss.NewStyle().Bold(true).Foreground(colorAccent).Padding(0, 1)
 }
 
+// Minimum terminal size we can sensibly lay out. Below this we render a
+// "too small" message instead of trying to fit the multi-panel layout, which
+// would otherwise produce negative panel heights and crash.
+const (
+	minLayoutWidth  = 80
+	minLayoutHeight = 26
+)
+
 // renderMultiPanelLayout renders the main multi-panel layout.
 func (m *Model) renderMultiPanelLayout() string {
+	if m.width < minLayoutWidth || m.height < minLayoutHeight {
+		return m.renderTooSmall()
+	}
+
 	// Calculate dimensions
 	// Left column (70% width): Filters + Station List
 	// Right column (30% width): Player + Sponsors
@@ -59,6 +71,15 @@ func (m *Model) renderMultiPanelLayout() string {
 func (m *Model) renderHeader() string {
 	title := titleStyle.Render(" rig.fm - Terminal Radio")
 	return title
+}
+
+// renderTooSmall is the fallback for terminals below the minimum layout size.
+// Resizing back up recovers the normal view on the next render.
+func (m *Model) renderTooSmall() string {
+	msg := lipgloss.NewStyle().Foreground(colorMuted).Align(lipgloss.Center).Render(
+		fmt.Sprintf("Terminal too small.\nResize to at least %d × %d.", minLayoutWidth, minLayoutHeight),
+	)
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, msg)
 }
 
 // renderStationListPanel renders the station list panel.
@@ -106,8 +127,12 @@ var waveFrames = []string{
 	"▃▂▁▂▃▂▁▁",
 }
 
-// truncateLines limits s to at most n lines.
+// truncateLines limits s to at most n lines. Returns an empty string for
+// non-positive n so callers can pass derived heights without bounds checks.
 func truncateLines(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
 	lines := strings.Split(s, "\n")
 	if len(lines) <= n {
 		return s
