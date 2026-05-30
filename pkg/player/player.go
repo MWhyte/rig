@@ -1,7 +1,6 @@
 package player
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -97,21 +96,20 @@ func (p *MPVPlayer) Play(url string) error {
 		p.stopLocked()
 	}
 
-	// Start mpv with IPC server and battery optimization flags.
+	// Start mpv with IPC server. Buffers sized generously enough to ride out
+	// bluetooth audio jitter without underrunning the audio thread.
 	//nolint:gosec // mpv args are constructed from trusted internal values
 	p.cmd = exec.CommandContext(context.Background(), "mpv",
-		"--no-video",                            // Audio only
-		"--no-terminal",                         // Don't take over terminal
-		"--input-ipc-server="+p.socketPath,      // IPC socket for control
-		"--volume="+fmt.Sprintf("%d", p.volume), // Set volume
-		"--cache=yes",                           // Enable caching
-		"--cache-secs=5",                        // Small buffer for streaming
-		"--demuxer-max-bytes=500K",              // Limit memory usage
-		"--audio-buffer=0.2",                    // Small audio buffer
+		"--no-video",
+		"--no-terminal",
+		"--input-ipc-server="+p.socketPath,
+		"--volume="+fmt.Sprintf("%d", p.volume),
+		"--cache=yes",
+		"--cache-secs=30",
+		"--demuxer-max-bytes=2M",
 		url,
 	)
 
-	// Capture stdout/stderr for debugging
 	stdout, err := p.cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("failed to create stdout pipe: %w", err)
@@ -123,24 +121,27 @@ func (p *MPVPlayer) Play(url string) error {
 		return fmt.Errorf("failed to create stderr pipe: %w", err)
 	}
 
-	// Start the process
 	if err := p.cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start mpv: %w", err)
 	}
 
-	// Read stderr in background for error detection
-	go func() {
-		scanner := bufio.NewScanner(stderr)
-		for scanner.Scan() {
-			// Could log errors here if needed
-			_ = scanner.Text()
-		}
-	}()
+	// Both pipes MUST be drained. If either fills its OS buffer (~64KB on
+	// macOS), mpv blocks on the next write and the audio thread stalls,
+	// producing a hard-to-diagnose freeze after long playback sessions.
+	go drainPipe(stdout)
+	go drainPipe(stderr)
 
 	p.currentURL = url
 	p.state = StatePlaying
 
 	return nil
+}
+
+// drainPipe consumes and discards everything from r until it returns EOF or
+// an error. This keeps the OS pipe buffer empty so mpv never blocks writing
+// to stdout/stderr.
+func drainPipe(r io.Reader) {
+	_, _ = io.Copy(io.Discard, r)
 }
 
 // Pause pauses playback.
@@ -346,18 +347,24 @@ func (p *MPVPlayer) getProperty(property string) (interface{}, error) {
 }
 
 // GetMetadata retrieves current playback metadata.
+//
+// The IPC round-trips run WITHOUT the player lock held. If mpv is slow to
+// respond (e.g. its main thread is stalled waiting on a bluetooth sink),
+// each getProperty can sit on its 2-second deadline; holding the lock for
+// the duration of four sequential calls would block any concurrent
+// Pause/Resume/SetVolume from the UI loop and freeze the app.
 func (p *MPVPlayer) GetMetadata() (*Metadata, error) {
 	p.mu.RLock()
-	defer p.mu.RUnlock()
+	state := p.state
+	p.mu.RUnlock()
 
-	if p.state == StateStopped {
+	if state == StateStopped {
 		return nil, fmt.Errorf("not playing")
 	}
 
 	metadata := &Metadata{}
 
-	// Get song title from icy-title only
-	// media-title fallback removed because it returns ugly URLs/filenames
+	// icy-title only; media-title falls back to ugly URLs/filenames.
 	if title, err := p.getProperty("metadata/icy-title"); err == nil {
 		if titleStr, ok := title.(string); ok {
 			metadata.Title = titleStr
