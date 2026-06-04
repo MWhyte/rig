@@ -58,11 +58,25 @@ a:hover {
   font-size: 3.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin-bottom: 16px;
+  margin-bottom: 32px;
+  line-height: 1.1;
 }
 
-.hero-title span {
+.hero-title .brand {
+  display: block;
+}
+
+.hero-title .brand > span {
   color: var(--accent);
+}
+
+.hero-subtitle {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0;
+  margin-top: 8px;
 }
 
 .hero-tagline {
@@ -389,6 +403,10 @@ a:hover {
 
   .hero-title {
     font-size: 2.2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
   }
 
   .hero-tagline {
