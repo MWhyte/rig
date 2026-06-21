@@ -20,6 +20,26 @@ archives:
   - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 
+nfpms:
+  - id: rig
+    package_name: rig
+    vendor: Michael Whyte
+    homepage: https://rig.fm
+    maintainer: Michael Whyte <mrmwhyte@gmail.com>
+    description: |
+      The most beautiful terminal radio CLI.
+      Browse, search and listen to thousands of internet radio stations from your terminal.
+    license: AGPL-3.0-only
+    formats:
+      - deb
+      - rpm
+      - apk
+    dependencies:
+      - mpv
+    bindir: /usr/bin
+    section: sound
+    file_name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
 checksum:
   name_template: checksums.txt
 

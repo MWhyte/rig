@@ -197,8 +197,16 @@
     <section class="install" id="install">
       <div class="container">
         <h2 class="section-title">Installation</h2>
-        <p class="install-note">Requires <a href="https://mpv.io/" target="_blank" rel="noopener noreferrer">mpv</a> for audio playback. Homebrew installs it automatically.</p>
+        <p class="install-note">Requires <a href="https://mpv.io/" target="_blank" rel="noopener noreferrer">mpv</a> for audio playback. The methods below pull it in automatically.</p>
         <div class="install-methods">
+          <div class="install-card">
+            <h3>Quick install (Linux and macOS)</h3>
+            <div class="code-block">
+              <code><span class="cmd">curl</span> <span class="flag">-fsSL</span> <span class="url">https://rig.fm/install.sh</span> | <span class="cmd">sh</span></code>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <p class="note">Detects your OS and architecture, verifies the checksum, installs to <code>/usr/local/bin</code>.</p>
+          </div>
           <div class="install-card">
             <h3>Homebrew (macOS and Linux)</h3>
             <div class="code-block">
@@ -207,16 +215,18 @@
             </div>
           </div>
           <div class="install-card">
-            <h3>Go install</h3>
+            <h3>Packages and binaries</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Pre-built <code>.deb</code>, <code>.rpm</code>, <code>.apk</code>, and tarballs for Linux and macOS are on the <a href="https://github.com/MWhyte/rig/releases" target="_blank" rel="noopener noreferrer">releases page</a>.</p>
+          </div>
+          <div class="install-card">
+            <h3>Build from source</h3>
             <div class="code-block">
-              <code><span class="cmd">go</span> <span class="arg">install</span> <span class="url">github.com/mrwhyte/rig/cmd/rig</span><span class="flag">@latest</span></code>
+              <code><span class="cmd">git</span> <span class="arg">clone</span> <span class="url">https://github.com/MWhyte/rig.git</span>
+<span class="cmd">cd</span> rig
+<span class="cmd">go</span> <span class="arg">build</span> <span class="flag">-o</span> rig ./cmd/rig</code>
               <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
             <p class="note">Requires Go 1.25 or later</p>
-          </div>
-          <div class="install-card">
-            <h3>Download binary</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Grab the latest release for your platform from the <a href="https://github.com/MWhyte/rig/releases" target="_blank" rel="noopener noreferrer">releases page</a>.</p>
           </div>
         </div>
       </div>

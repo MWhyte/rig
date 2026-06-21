@@ -46,7 +46,15 @@ Press `i` while a station is playing. rig taps the audio, fingerprints it locall
 
 ## Installation
 
-rig.fm requires [mpv](https://mpv.io/) for audio playback. Homebrew installs it automatically. For other install methods, make sure mpv is available on your system.
+rig.fm requires [mpv](https://mpv.io/) for audio playback. The install methods below pull it in automatically; otherwise install it with your system package manager.
+
+### Quick install (Linux and macOS)
+
+```bash
+curl -fsSL https://rig.fm/install.sh | sh
+```
+
+Detects your OS and architecture, downloads the matching binary from GitHub Releases, verifies the checksum, and installs to `/usr/local/bin`.
 
 ### Homebrew (macOS and Linux)
 
@@ -54,17 +62,9 @@ rig.fm requires [mpv](https://mpv.io/) for audio playback. Homebrew installs it 
 brew install mwhyte/tap/rig
 ```
 
-### Download binary
+### Packages and binaries
 
-Grab the latest release for your platform from the [releases page](https://github.com/MWhyte/rig/releases).
-
-### Go install
-
-```bash
-go install github.com/mrwhyte/rig/cmd/rig@latest
-```
-
-Requires Go 1.25 or later.
+Pre-built `.deb`, `.rpm`, `.apk`, and tarballs for Linux and macOS are on the [releases page](https://github.com/MWhyte/rig/releases).
 
 ### Build from source
 
@@ -74,6 +74,8 @@ cd rig
 go build -o rig ./cmd/rig
 ./rig
 ```
+
+Requires Go 1.25 or later.
 
 ## Usage
 
