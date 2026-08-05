@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/atotto/clipboard"
 	"github.com/mrwhyte/rig/pkg/config"
 
 	"charm.land/bubbles/v2/list"
@@ -130,6 +131,13 @@ func (m *Model) handleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.resetIdentifyState()
 		m.showIdentifyModal = true
 		return m, tea.Batch(m.startIdentify(), m.identifySpinner.Tick)
+
+	case "y":
+		// Copy currently playing song name to clipboard.
+		if m.currentSong != "" {
+			_ = clipboard.WriteAll(m.currentSong)
+		}
+		return m, nil
 
 	case "f":
 		// Toggle favorite for selected station
