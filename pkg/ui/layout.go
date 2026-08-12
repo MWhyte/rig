@@ -443,6 +443,7 @@ func (m *Model) renderHelpModal() string {
 	row("s", "Stop")
 	row("+ / -", "Volume up / down")
 	row("i", "Identify track")
+	row("y", "Copy track name")
 	row("t", "Sleep timer")
 	row("ctrl+t", "Theme picker")
 	row("q / ctrl+c", "Quit")
