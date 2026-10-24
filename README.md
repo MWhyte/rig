@@ -95,6 +95,7 @@ rig
 | `s` | Search stations |
 | `i` | Identify the playing track |
 | `o` | Open identified track on shazam.com |
+| `y` | Copy the track name to the clipboard |
 | `?` | Help |
 | `q` | Quit |
 
