@@ -12,6 +12,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/atotto/clipboard"
 
 	"github.com/mrwhyte/rig/pkg/identifier"
 )
@@ -96,6 +97,13 @@ func (m *Model) handleIdentifyModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cm
 			if err := openURL(m.identifyTrack.ShazamURL); err != nil {
 				m.identifyErr = fmt.Errorf("open url: %w", err)
 			}
+		}
+		return m, nil
+
+	case "y":
+		if m.identifyTrack != nil {
+			text := m.identifyTrack.Artist + " - " + m.identifyTrack.Title
+			_ = clipboard.WriteAll(text)
 		}
 		return m, nil
 	}
@@ -204,9 +212,9 @@ func (m *Model) renderIdentifyResult() string {
 	if t.ShazamURL != "" {
 		b.WriteString(lipgloss.NewStyle().
 			Foreground(colorDim).
-			Render("press o to open in Shazam · enter/esc to close"))
+			Render("o: open in Shazam · y: copy · enter/esc: close"))
 	} else {
-		b.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render("enter/esc to close"))
+		b.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render("y: copy · enter/esc: close"))
 	}
 	return b.String()
 }
