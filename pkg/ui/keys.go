@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/atotto/clipboard"
-	"github.com/mrwhyte/rig/pkg/config"
-
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	"github.com/atotto/clipboard"
+
+	"github.com/mrwhyte/rig/pkg/config"
 )
 
 // Key string constants shared across handlers.
