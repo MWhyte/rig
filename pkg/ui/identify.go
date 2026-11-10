@@ -12,7 +12,6 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/atotto/clipboard"
 
 	"github.com/mrwhyte/rig/pkg/identifier"
 )
@@ -101,11 +100,11 @@ func (m *Model) handleIdentifyModalInput(msg tea.KeyPressMsg) (tea.Model, tea.Cm
 		return m, nil
 
 	case "y":
-		if m.identifyTrack != nil {
-			text := m.identifyTrack.Artist + " - " + m.identifyTrack.Title
-			_ = clipboard.WriteAll(text)
+		if m.identifyTrack == nil {
+			return m, nil
 		}
-		return m, nil
+		text := m.identifyTrack.Artist + " - " + m.identifyTrack.Title
+		return m, m.identifyCopy.copy(text)
 	}
 	return m, nil
 }
@@ -122,6 +121,7 @@ func (m *Model) resetIdentifyState() {
 	m.showIdentifyModal = false
 	m.identifyTrack = nil
 	m.identifyErr = nil
+	m.identifyCopy.reset()
 }
 
 // renderIdentifyModal renders a centred modal showing either the spinner
@@ -209,12 +209,23 @@ func (m *Model) renderIdentifyResult() string {
 		}
 	}
 	b.WriteString("\n\n  ")
-	if t.ShazamURL != "" {
-		b.WriteString(lipgloss.NewStyle().
-			Foreground(colorDim).
-			Render("o: open in Shazam · y: copy · enter/esc: close"))
-	} else {
-		b.WriteString(lipgloss.NewStyle().Foreground(colorDim).Render("y: copy · enter/esc: close"))
-	}
+	b.WriteString(m.renderIdentifyFooter())
 	return b.String()
+}
+
+// renderIdentifyFooter shows the key hints, or a brief copy confirmation in
+// their place straight after the user presses y.
+func (m *Model) renderIdentifyFooter() string {
+	if m.identifyCopy.visible {
+		if m.identifyCopy.err != nil {
+			return lipgloss.NewStyle().Foreground(colorWarning).Render("✗ Couldn't copy to clipboard")
+		}
+		return lipgloss.NewStyle().Foreground(colorAccent).Render("✓ Copied to clipboard")
+	}
+
+	hint := "y: copy · enter/esc: close"
+	if m.identifyTrack.ShazamURL != "" {
+		hint = "o: open in Shazam · " + hint
+	}
+	return lipgloss.NewStyle().Foreground(colorDim).Render(hint)
 }
