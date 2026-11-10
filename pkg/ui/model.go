@@ -129,7 +129,6 @@ type Model struct {
 	identifyErr       error
 	identifySpinner   spinner.Model
 	identifyCancel    context.CancelFunc
-	identifyCopy      copyNotice
 }
 
 // NewModel creates a new application model.
@@ -648,10 +647,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.identifyTrack = msg.track
 		m.identifyErr = msg.err
-		return m, nil
-
-	case copyNoticeExpiredMsg:
-		m.identifyCopy.expire(msg.seq)
 		return m, nil
 
 	case spinner.TickMsg:
